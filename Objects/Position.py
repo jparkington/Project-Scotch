@@ -1,9 +1,10 @@
 '''
+Author:        James Parkington
+Created Date:  3/26/2023
+Modified Date: 4/15/2023
+
 File containing the implementation of the Position class for representing 
 chess positions in a chess game analysis tool.
-
-Created on 3/26/2023
-James Parkington
 '''
 
 class Position:
@@ -18,7 +19,7 @@ class Position:
         is_valid():           Checks if the current position is valid according to the rules of chess.
         board_to_bitstring(): Converts the board state to a 64-bit string representation.
     """
-
+    # Constructor
     def __init__(self, board_state, move_history, player_turn):
             self.board_state  = board_state
             self.move_history = move_history

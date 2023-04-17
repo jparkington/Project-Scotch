@@ -1,10 +1,11 @@
 '''
+Author:        James Parkington
+Created Date:  3/26/2023
+Modified Date: 4/15/2023
+
 File containing the implementation of the Matcher class for comparing user-inputted
 positions with a database of existing games and returning the best matching games
 and relevant information in a chess game analysis tool.
-
-Created on 3/26/2023
-James Parkington
 '''
 
 class Matcher:
@@ -18,7 +19,7 @@ class Matcher:
         find_partial_matches(user_position):           Searches the position_database for positions with similar board states and move histories to the user-inputted position.
         compute_similarity(position1, position2):      Calculates a similarity score between two positions based on their board states and move histories.
     """
-
+    # Constructor
     def __init__(self, position_database):
         self.position_database = position_database
 
