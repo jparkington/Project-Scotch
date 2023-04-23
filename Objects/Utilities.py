@@ -14,44 +14,52 @@ Functions:
 '''
 
 from   IPython import get_ipython
+from   typing  import *
 import pandas  as pd
 import sqlite3 as sq
 import os
 
-def save_path(use_parent_directory, *subdirs):
+def save_path(use_parent: bool, 
+              *subdirs:   str) \
+              -> str:
     '''
     Construct a file path based on the provided subdirectories.
     Optionally, include the parent directory in the path.
 
     Args:
-        use_parent_directory (bool): If True, include the parent directory in the path.
-        subdirs (str): Subdirectories to include in the path.
+        use_parent: If True, include the parent directory in the path.
+        subdirs:    Subdirectories to include in the path.
 
     Returns:
-        str: The constructed file path.
-    '''
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) if use_parent_directory else os.path.dirname(os.path.abspath(__file__))
+        str: The constructed file path.'''
+
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) \
+               if use_parent else os.path.dirname(os.path.abspath(__file__))
+    
     return os.path.join(base_dir, *subdirs)
 
 
-
-def to_dataframe(data, 
-                 by        = None, 
-                 ascending = True,
-                 add_id    = True, 
-                 sql_table = None):
+def to_dataframe(data:      Dict[str, Any], 
+                 by:        Optional[List[str]] = None, 
+                 ascending: bool                = True,
+                 add_id:    bool                = True, 
+                 filename:  Optional[str]       = None,
+                 sql_table: Optional[str]       = None) \
+                -> pd.DataFrame:
     '''
     Return a pandas DataFrame representation of the data dictionary object.
     Optionally save the DataFrame to a CSV file if the filename is provided.
 
     Args:
-        data (dict): The data to be converted to a DataFrame.
-        by (str or list of str, optional): Column(s) to sort the DataFrame by.
-        ascending (bool, optional): Sort order for the specified columns. Defaults to True.
-        sql_table (str, optional): Name of the SQL table to save the DataFrame to.
+        data:      The data to be converted to a DataFrame.
+        by:        Column(s) to sort the DataFrame by (optional).
+        ascending: Sort order for the specified columns (optional, default: True).
+        add_id:    Whether to add an id column (optional, default: True).
+        filename:  Name of the CSV file to save the DataFrame to (optional).
+        sql_table: Name of the SQL table to save the DataFrame to (optional).
 
     Returns:
-        pd.DataFrame: The sorted DataFrame with an id column added.
+        The sorted DataFrame with an id column added (if specified).
     
     Considerations:
         An id column is added with monotonically increasing integers starting from 1 to facilitate record identification and improve query performance.
@@ -64,6 +72,9 @@ def to_dataframe(data,
 
     if add_id:
         df.insert(0, 'id', range(1, len(df) + 1))
+
+    if filename:
+        df.to_csv(filename, index = False)
 
     if sql_table:
         df.to_sql(sql_table, 

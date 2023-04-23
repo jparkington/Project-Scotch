@@ -1,59 +1,57 @@
 '''
 Author:        James Parkington
 Created Date:  3/26/2023
-Modified Date: 4/15/2023
+Modified Date: 4/22/2023
 
-File containing the implementation of the PGNParser class for parsing PGN files
-and generating Position objects in a chess game analysis tool.
+File containing the implementation of the PGN class for parsing PGN files and generating Position objects
+in a chess game analysis tool. The class makes use of the python-chess library for parsing and validating
+PGN files.
 '''
 
 from Position import *
-import re
+from chess    import pgn
+from typing   import List
 
 class PGN:
-    def __init__(self, pgn):
-        self.pgn = pgn
+    '''
+    Attributes:
+        pgn_file_path (str): The file path of the PGN file to be parsed.
 
-    def get_pgn(self):
-        return self.pgn
+    Methods:
+        __call__(): Parses the PGN file and returns a list of Position objects representing each position in the game.
 
-    def set_pgn(self, pgn):
-        self.pgn = pgn
+    This class leverages the python-chess library to parse and validate PGN files, allowing the focus to be on
+    storing positions as bitboards for Matcher.
+    '''
 
-    def read_pgn_file(self):
-        with open(self.pgn, "r") as file:
-            content = file.read()
-        return content
+    def __init__(self, pgn_file_path):
 
-    def parse_pgn(self):
-        content = self.read_pgn_file()
-        self.parse_metadata(content)
-        self.extract_moves(content)
-        self.convert_moves()
+        self.pgn_file_path = pgn_file_path
 
-        # Initialize a starting position
-        position = Position()
+    def get_pgn_file_path(self):
+        return self.pgn_file_path
 
-        # Iterate through moves and interact with the Position and Piece classes
-        for move in self.moves:
-            # Validate and apply the move using the Piece and Position classes
-            pass
+    def set_pgn_file_path(self, pgn_file_path):
+        self.pgn_file_path = pgn_file_path
+        
 
-    def parse_metadata(self, content):
-        metadata = {}
-        metadata_regex = re.compile(r'\[(\w+)\s+"([^"]*)"\]')
-        matches = metadata_regex.findall(content)
-        for match in matches:
-            key, value = match
-            metadata[key] = value
-        self.metadata = metadata
+    def __call__(self) -> List[Position]:
+        '''
+        Parses the PGN file and returns a list of Position objects representing each position in the game.
 
-    def extract_moves(self, content):
-        moves_regex = re.compile(r'\d+\.(?:\s*\w+){1,2}')
-        self.move_text = moves_regex.findall(content)
+        The method performs the following steps:
+            1. Read the PGN file using the python-chess library.
+            2. Iterate through the moves of the game, updating the chess.Board object and creating a Position object using the Position.from_chess_board() method.
+            3. Return the list of positions.
+        '''
 
-    def convert_moves(self):
-        self.moves = []
-        for move_pair in self.move_text:
-            moves = move_pair.strip().split()[1:]  # Remove move number and split into white and black moves
-            self.moves.extend(moves)
+        with open(self.get_pgn_file_path(), "r") as pgn_file:
+            game      = pgn.read_game(pgn_file)
+            board     = game.board()
+            positions = [Position.from_chess_board(board)]
+
+            for move in game.mainline_moves():
+                board.push(move)
+                positions.append(Position.from_chess_board(board))
+
+        return positions
