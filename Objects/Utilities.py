@@ -11,7 +11,6 @@ Functions:
     save_path:    Constructs a file path based on the provided subdirectories and an optional parent directory
     open_pgn:     Opens a dialog box to let users choose a .pgn file
     to_dataframe: Converts the generated data to a pandas DataFrame, sorts it, and optionally saves it to a SQLite database table and/or a CSV file
-    load_sql:     Loads the ipython-sql extension and establishes a connection to a SQLite database
 '''
 
 from   IPython            import get_ipython
@@ -101,18 +100,3 @@ def open_pgn():
 #                   index     = False)
         
 #     return df
-
-
-# def load_sql():
-#     '''
-#     Load the ipython-sql extension and establish a connection to the SQLite database.
-    
-#     This function is designed to be used in Jupyter Notebooks. It loads the ipython-sql extension and connects to the SQLite database using the provided file path.
-#     '''
-#     ipy = get_ipython()
-    
-#     # Check if the 'sql' extension is already loaded
-#     if not ipy.find_line_magic("sql"):
-#         ipy.run_line_magic("load_ext", "sql")
-        
-#     ipy.run_line_magic("sql", f"sqlite:///{}")

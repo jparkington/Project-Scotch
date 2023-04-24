@@ -21,10 +21,16 @@ def main():
             print("No file selected.")
             return
 
+    # Matcher would go here, print the desired outputs about match percentage, and prompt the user about continuing, returning another PGN object
     pgn       = Parser(pgn_path)
-    metadata  = pgn.get_metadata()
     positions = pgn.get_positions()
-    navigator = Navigator(positions)
+    metadata  = pgn.get_metadata()
+    source    = pgn.get_source()
+    navigator = Navigator(positions, metadata, source)
+
+    print(metadata)
+    print(source)
+    print(source == "user")
 
     navigator()
 
@@ -45,6 +51,12 @@ if __name__ == "__main__":
 # Maybe something like, "Your closest game match is I vs. J on 1981, in which you had X out of Y of the same moves. Your longest matching sequence was Z moves from A to B. Would you like to take a look at those moves? (Requires Renderer.py class with tkinter)
 # Next dialog: "Would you like to see how the I vs. J match continued from your longest sequence?"
 # Also for the database, design an ID based on a hex of all the PGN moves and see if that ID exists first
+# Check if the game is in the program's history and have a dialog if not (would you like to add this game to the historical record?)
+# Add parquet classes
+# Add a full testing suite
+# Maybe a prompt at upload that says "We already have this exact game played out: w vs. b in y"
+# Columns for storage: ID (based on hash of positions), metadata (dict), bitstrings (dict), binary representation (dict)
+
 
 '''
 Your Final Project is a time to show how you can put everything together.  You should create a project based on your own interests that has the following characteristics:

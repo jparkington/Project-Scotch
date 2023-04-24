@@ -10,15 +10,20 @@ as an interactive slideshow using tkinter.
 from   Position  import *
 from   typing    import List
 from   itertools import *
+from   datetime  import datetime
 import tkinter as tk
 
 class Navigator:
     '''
     Attributes:
         positions (List[Position]): The list of Position objects to be displayed in the slideshow.
+        metadata (dict):            The metadata associated with the game.
+        source (str):               The platform or process through which the chess game is being parsed.
         index (int):                The current index in the list of Position objects.
         square_size (int):          The size of each square in the chessboard canvas.
         root (tk.Tk):               The tkinter root object.
+        match (tk.Label):           The tkinter Label object used to display whether or not this was a matching position.
+        event (tk.Label):           The tkinter Label object used to display the players in a matched game.
         move (tk.Label):            The tkinter Label object used to display the move information.
         turn (tk.Label):            The tkinter Label object used to display whose turn it is.
         canvas (tk.Canvas):         The tkinter Canvas object used to display the chessboard.
@@ -40,13 +45,20 @@ class Navigator:
     user to navigate through positions using the left and right arrow keys.
     '''
 
-    def __init__(self, positions: List[Position]):
+    def __init__(self, 
+                 positions: List[Position],
+                 metadata:  dict,
+                 source:    str):
         self.positions   = positions
+        self.metadata    = metadata
+        self.source      = source
         self.index       = 0
         self.square_size = 80
 
         self.root   = tk.Tk()
-        self.move   = tk.Label(self.root, font = ("Menlo", 18, "bold"))
+        self.match  = tk.Label(self.root, font = ("Menlo", 20, "bold"))
+        self.event  = tk.Label(self.root, font = ("Menlo", 14, "italic"))
+        self.move   = tk.Label(self.root, font = ("Menlo", 12, "bold"))
         self.turn   = tk.Label(self.root, font = ("Menlo", 12))
         self.canvas = tk.Canvas(self.root,
                                 width  = self.get_square_size() * 8, 
@@ -58,17 +70,11 @@ class Navigator:
         self.e_arrow = tk.Button(self.root, text = "▶▶", font = ("Arial Unicode MS", 26), command = self.end_position)
 
 
-    def get_positions(self):
-        return self.positions
-
     def get_index(self):
         return self.index
     
     def get_square_size(self):
         return self.square_size
-    
-    def set_positions(self, positions):
-        self.positions = positions
 
     def set_index(self, index):
         self.index = index
@@ -77,7 +83,7 @@ class Navigator:
         self.square_size = square_size
 
 
-    def draw_canvas(self):
+    def draw_canvas(self, position):
         '''
         Draws the chessboard corresponding to the current position.
         
@@ -85,13 +91,13 @@ class Navigator:
         index. It then adds the corresponding chess piece to the center of each square. The chessboard is drawn on the 
         tkinter canvas, which is then packed and visible in the tkinter window.
         '''
-        position    = self.get_positions()[self.get_index()]
+
         board       = position.get_board()
         square_size = self.get_square_size()
-        colors      = ["#E0E0E0", "#B0B0B0"] * 4 + ["#B0B0B0", "#E0E0E0"] * 4
         squares     = [square for row in board for square in row]
+        colors      = ["#E0E0E0", "#B0B0B0" if position.get_user_submitted() else "#A6D3FF"] * 4
 
-        for i, (color, square) in enumerate(zip(cycle(colors), squares)):
+        for i, (color, square) in enumerate(zip(cycle(colors + colors[::-1]), squares)):
             j = i % 8
             x = j * square_size
             y = (i // 8) * square_size
@@ -109,14 +115,19 @@ class Navigator:
         packed and visible in the tkinter window.
         '''
 
-        position = self.get_positions()[self.get_index()]
+        position = self.positions[self.get_index()]
 
         self.canvas.delete("all")
-        self.draw_canvas()
+        self.draw_canvas(position)
+        ts = datetime.now().strftime('%b %d, %Y at %-I:%M %p')
 
-        self.move.config(text = f"{position.get_move_number()}. {position.get_move_notation()}", pady = 10)
-        self.turn.config(text = "Black to Move" if position.white_turn else "White to Move",     pady = 10)
+        self.match.config(text = f"Game Uploaded on {ts}" if self.source == "user" else ("Matched Game" if position.user_submitted() else "Continuation"),        pady = 10)
+        self.event.config(text = f"{self.metadata.get('White', '')} vs. {self.metadata.get('Black', '')} ({self.metadata.get('Date', '').split('.')[0]})",        pady = 0)
+        self.move.config(text  = f"{position.get_move_number()}. {position.get_move_notation()}",                                                                 pady = 10)
+        self.turn.config(text  = self.metadata.get('Result', '') if position.get_final_move() else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
 
+        self.match.pack()
+        self.event.pack()
         self.move.pack()
         self.canvas.pack()
         self.turn.pack()
@@ -128,7 +139,7 @@ class Navigator:
 
 
     def next_position(self, event = None):
-        self.set_index(min(self.get_index() + 1, len(self.get_positions()) - 1))
+        self.set_index(min(self.get_index() + 1, len(self.positions) - 1))
         self.display_position()
 
     def prev_position(self, event = None):
@@ -140,7 +151,7 @@ class Navigator:
         self.display_position()
 
     def end_position(self, event = None):
-        self.set_index(len(self.get_positions()) - 1)
+        self.set_index(len(self.positions) - 1)
         self.display_position()
 
 

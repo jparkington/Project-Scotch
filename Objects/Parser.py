@@ -16,6 +16,7 @@ class Parser:
     '''
     Attributes:
         pgn_path (str):        The file path of the PGN file to be parsed.
+        source (str):          The platform or process through which the chess game is being parsed.
         game (chess.pgn.Game): The parsed PGN game object.
 
     Methods:
@@ -29,14 +30,21 @@ class Parser:
 
     def __init__(self, pgn_path):
         self.pgn_path = pgn_path
+        self.source   = "user"
         self.game     = self.read_game()
 
 
     def get_pgn_path(self):
         return self.pgn_path
+    
+    def get_source(self):
+        return self.source
 
     def set_pgn_path(self, pgn_path):
         self.pgn_path = pgn_path
+
+    def set_source(self, source):
+        self.source = source
 
 
     def read_game(self) -> pgn.Game:
@@ -65,11 +73,12 @@ class Parser:
         The method performs the following steps:
             1. Read the PGN file using the python-chess library.
             2. Iterate through the moves of the game, updating the chess.Board object and creating a Position object using the Position.from_chess_board() method.
-            3. Set the move number and move notation (in SAN) for each Position object.
+            3. Set the move number, move notation (in SAN), and user submission status for each Position object.
             4. Return the list of positions.
         '''
 
         game      = self.read_game()
+        source    = self.get_source()
         board     = game.board()
         positions = [Position.from_chess_board(board)]
 
@@ -81,9 +90,13 @@ class Parser:
             position = Position.from_chess_board(board)
             position.set_move_number(move_number)
             position.set_move_notation(move_notation)
+            if source != "user":
+                position.set_user_submitted(False)
+
             positions.append(position)
 
             if board.turn:
                 move_number += 1
 
+        positions[-1].set_final_move(True)
         return positions

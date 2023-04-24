@@ -13,11 +13,13 @@ import chess
 class Position:
     '''
     Attributes:
-        move_history  (list): A list or stack storing the sequence of moves made in the game.
-        white_turn    (str):  A boolean indicating whether or not it is white's turn to move.
-        move_number   (int):  The move number for the current position.
-        move_notation (str):  The move notation in Standard Algebraic Notation (SAN) for the current position.
-        bitboards     (dict): A dictionary containing the bitboards for each piece type and color.
+        move_history   (list): A list or stack storing the sequence of moves made in the game.
+        user_submitted (bool): A boolean indicating whether or not the file came from the user or the program's game storage
+        white_turn     (bool): A boolean indicating whether or not it is white's turn to move.
+        move_number    (int):  The move number for the current position.
+        move_notation  (str):  The move notation in Standard Algebraic Notation (SAN) for the current position.
+        final_move     (bool): A boolean indicating whether or not this position was the last one in the PGN file.
+        bitboards      (dict): A dictionary containing the bitboards for each piece type and color.
 
     Methods:
         apply_move():           Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
@@ -33,26 +35,31 @@ class Position:
     '''
 
     def __init__(self):
-        self.move_history  = []
-        self.white_turn    = True
-        self.move_number   = 0
-        self.move_notation = "Game Start"
-        self.bitboards     = {'♙' : 0b0000000000000000000000000000000000000000000000001111111100000000,
-                              '♖' : 0b0000000000000000000000000000000000000000000000000000000010000001,
-                              '♘' : 0b0000000000000000000000000000000000000000000000000000000001000010,
-                              '♗' : 0b0000000000000000000000000000000000000000000000000000000000100100,
-                              '♕' : 0b0000000000000000000000000000000000000000000000000000000000010000,
-                              '♔' : 0b0000000000000000000000000000000000000000000000000000000000001000,
-                              '♟︎' : 0b0000000011111111000000000000000000000000000000000000000000000000,
-                              '♜' : 0b1000000100000000000000000000000000000000000000000000000000000000,
-                              '♞' : 0b0100001000000000000000000000000000000000000000000000000000000000,
-                              '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
-                              '♛' : 0b0001000000000000000000000000000000000000000000000000000000000000,
-                              '♚' : 0b0000100000000000000000000000000000000000000000000000000000000000}
+        self.move_history   = []
+        self.user_submitted = True
+        self.white_turn     = True
+        self.move_number    = 0
+        self.move_notation  = "Game Start"
+        self.final_move     = False
+        self.bitboards      = {'♙' : 0b0000000000000000000000000000000000000000000000001111111100000000,
+                               '♖' : 0b0000000000000000000000000000000000000000000000000000000010000001,
+                               '♘' : 0b0000000000000000000000000000000000000000000000000000000001000010,
+                               '♗' : 0b0000000000000000000000000000000000000000000000000000000000100100,
+                               '♕' : 0b0000000000000000000000000000000000000000000000000000000000010000,
+                               '♔' : 0b0000000000000000000000000000000000000000000000000000000000001000,
+                               '♟︎' : 0b0000000011111111000000000000000000000000000000000000000000000000,
+                               '♜' : 0b1000000100000000000000000000000000000000000000000000000000000000,
+                               '♞' : 0b0100001000000000000000000000000000000000000000000000000000000000,
+                               '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
+                               '♛' : 0b0001000000000000000000000000000000000000000000000000000000000000,
+                               '♚' : 0b0000100000000000000000000000000000000000000000000000000000000000}
         
          
     def get_move_history(self):
         return self.move_history
+    
+    def get_user_submitted(self):
+        return self.user_submitted
     
     def get_white_turn(self):
         return self.white_turn
@@ -63,11 +70,17 @@ class Position:
     def get_move_notation(self):
         return self.move_notation
     
+    def get_final_move(self):
+        return self.final_move
+    
     def get_bitboards(self):
         return self.bitboards
     
     def set_move_history(self, move_history):
         self.move_history = move_history
+        
+    def set_user_submitted(self, user_submitted):
+        self.move_history = user_submitted
 
     def set_white_turn(self, white_turn):
         self.white_turn = white_turn
@@ -77,6 +90,9 @@ class Position:
     
     def set_move_notation(self, move_notation):
         self.move_notation = move_notation
+
+    def set_final_move(self, final_move):
+        self.final_move = final_move
 
     def set_bitboards(self, bitboards):
         self.bitboards = bitboards

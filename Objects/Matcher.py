@@ -8,53 +8,41 @@ positions with a database of existing games and returning the best matching game
 and relevant information in a chess game analysis tool.
 '''
 
+import pyarrow.parquet as pq
+import pandas as pd
+from Position import *
+from typing import List
+
 class Matcher:
-    """
-    Attributes:
-        position_database (dict or DataFrame): A data structure storing existing games and their corresponding board states for efficient searching and matching.
+    def __init__(self, parquet_path: str):
+        self.parquet_path = parquet_path
 
-    Methods:
-        add_position(position):                        Adds a given Position object to the position_database.
-        find_best_matches(user_position, num_matches): Compares a user-inputted position with positions in the position_database and returns the num_matches best matching games and their relevant information (e.g., opening names, number of moves, plausible continuations).
-        find_partial_matches(user_position):           Searches the position_database for positions with similar board states and move histories to the user-inputted position.
-        compute_similarity(position1, position2):      Calculates a similarity score between two positions based on their board states and move histories.
-    """
-    # Constructor
-    def __init__(self, position_database):
-        self.position_database = position_database
+    def get_parquet_path(self):
+        return self.parquet_path
 
-    # Accessors
-    def get_position_database(self):
-        return self.position_database
+    def set_parquet_path(self, parquet_path: str):
+        self.parquet_path = parquet_path
 
-    # Mutators
-    def set_position_database(self, position_database):
-        self.position_database = position_database
+    def load_games(self) -> pd.DataFrame:
+        return pq.read_table(self.get_parquet_path()).to_pandas()
 
-    def add_position(self, position):
-        """
-        Adds a given Position object to the position_database.
-        """
-        pass
+    def find_best_match(self, positions: List[Position]) -> pd.DataFrame:
+        games = self.load_games()
+        best_match = None
+        longest_match = 0
 
-    def find_best_matches(self, user_position, num_matches):
-        """
-        Compares a user-inputted position with positions in the position_database
-        and returns the num_matches best matching games and their relevant information
-        (e.g., opening names, number of moves, plausible continuations).
-        """
-        pass
+        for index, game in games.iterrows():
+            game_positions = game['positions']
+            common_positions = 0
 
-    def find_partial_matches(self, user_position):
-        """
-        Searches the position_database for positions with similar board states and
-        move histories to the user-inputted position.
-        """
-        pass
+            for user_pos, game_pos in zip(positions, game_positions):
+                if user_pos == game_pos:
+                    common_positions += 1
+                else:
+                    break
 
-    def compute_similarity(self, position1, position2):
-        """
-        Calculates a similarity score between two positions based on their board
-        states and move histories.
-        """
-        pass
+            if common_positions > longest_match:
+                longest_match = common_positions
+                best_match = game
+
+        return best_match, longest_match
