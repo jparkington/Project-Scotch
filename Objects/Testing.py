@@ -11,13 +11,14 @@ are going to fail, because I was actively trying to rework methods in each of th
 results from this unit test.
 """
 
-from Matcher   import Matcher
-from Navigator import Navigator
-from Parser    import Parser
-from Position  import Position
-from Utilities import *
-from chess     import pgn
-from typing    import *
+from Application   import *
+from Matcher       import Matcher
+from Navigator     import Navigator
+from Parser        import Parser
+from Position      import Position
+from Utilities     import *
+from chess         import pgn
+from typing        import *
 import tkinter as tk
 import unittest
 
