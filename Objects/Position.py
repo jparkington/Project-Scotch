@@ -22,12 +22,13 @@ class Position:
         bitboards      (dict): A dictionary containing the bitboards for each piece type and color.
 
     Methods:
-        apply_move():           Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
-        from_chess_board():     Creates a Position object from a python-chess Board object.
-        get_board():            Generates a 2D list representing the board state at a given ply.
-        get_bitboard_strings(): Returns the bitboards for each piece in the position as a multiline string.
-        convert_piece_symbol(): Converts a python-chess piece symbol to the corresponding Unicode symbol.
-        __str__():              Returns a textual representation of the board state at a given ply for easy visualization.
+        apply_move():            Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
+        from_chess_board():      Creates a Position object from a python-chess Board object.
+        get_board():             Generates a 2D list representing the board state at a given ply.
+        get_bitboard_integers(): Returns a list of the integer resolutions of each bitstring for a given position.
+        get_bitboard_strings():  Returns the bitboards for each piece in the position as a multiline string.
+        convert_piece_symbol():  Converts a python-chess piece symbol to the corresponding Unicode symbol.
+        __str__():               Returns a textual representation of the board state at a given ply for easy visualization.
 
     Bitboards are an efficient way to represent chess positions using 64-bit integers, with each bit corresponding to a square on the chessboard. 
     They offer several advantages, including memory efficiency, fast bitwise operations on modern CPUs, simplified move generation, and ease of implementation. 
@@ -35,6 +36,7 @@ class Position:
     '''
 
     def __init__(self):
+
         self.move_history   = []
         self.user_submitted = True
         self.white_turn     = True
@@ -187,8 +189,18 @@ class Position:
                 board[row][col] = piece
 
         return board
+    
         
-        
+    def get_bitboard_integers(self):
+        '''
+        Returns a list of the integer resolutions of each bitstring for a given position.
+
+        A production version of this would not convert to strings, but would instead use a performant data type for Parquet storage.
+        '''
+
+        return [str(bitboard) for bitboard in self.get_bitboards().values()]
+    
+
     def get_bitboard_strings(self, full_bitstrings: bool = False) -> str:
         '''
         Returns the bitboards for each piece in the position as a multiline string.
@@ -198,11 +210,11 @@ class Position:
                              If False (default), returns the binary representation of the bitstrings.
         '''
 
-        bitboard_strings = [f"{piece}: {str(bitboard) if full_bitstrings else bin(bitboard)[2:].zfill(64)}"
+        bitboard_strings = [f"{piece}: {bin(bitboard)[2:].zfill(64)if full_bitstrings else str(bitboard)}"
                             for piece, bitboard in self.get_bitboards().items()]
 
         return "\n".join(bitboard_strings)
-        
+ 
 
     def __str__(self) -> str:
         '''

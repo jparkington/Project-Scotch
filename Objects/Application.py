@@ -7,6 +7,7 @@ File containing a demonstration of the PGN class usage for parsing a PGN file
 and interacting with the Position and Piece classes in a chess game analysis tool.
 '''
 
+from Matcher   import *
 from Navigator import *
 from Parser    import *
 from Utilities import *
@@ -27,42 +28,24 @@ def main():
     metadata  = pgn.get_metadata()
     source    = pgn.get_source()
     navigator = Navigator(positions, metadata, source)
-
-    print(metadata)
-    print(source)
-    print(source == "user")
-
     navigator()
 
-    # Print the board state for the initial position and a few other positions
-    print("\nInitial position:")
-    print(positions[0])
-
-    print("\nPosition after move 5 (with bitboards):")
-    print(positions[5 * 2 - 1].get_bitboard_strings())
-
-    print("\nPosition after move 10 (with full bitstrings):")
-    print(positions[10 * 2 - 1].get_bitboard_strings(True))
+    matched   = Matcher(positions)
+    best_game, matched_moves, total_moves = matched.find_best_match()
+    print(*matched.find_best_match())
 
 if __name__ == "__main__":
     main()
 
 
+# Left to Implement
 # Maybe something like, "Your closest game match is I vs. J on 1981, in which you had X out of Y of the same moves. Your longest matching sequence was Z moves from A to B. Would you like to take a look at those moves? (Requires Renderer.py class with tkinter)
 # Next dialog: "Would you like to see how the I vs. J match continued from your longest sequence?"
-# Also for the database, design an ID based on a hex of all the PGN moves and see if that ID exists first
-# Check if the game is in the program's history and have a dialog if not (would you like to add this game to the historical record?)
-# Add parquet classes
-# Add a full testing suite
 # Maybe a prompt at upload that says "We already have this exact game played out: w vs. b in y"
-# Columns for storage: ID (based on hash of positions), metadata (dict), bitstrings (dict), binary representation (dict)
+# Check if the game is in the program's history and have a dialog if not (would you like to add this game to the historical record?)
 
 
 '''
-Your Final Project is a time to show how you can put everything together.  You should create a project based on your own interests that has the following characteristics:
-
-4) Is thoroughly tested
-
 You should also write a report that describes the following:
 
 1) Project description

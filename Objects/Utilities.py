@@ -8,17 +8,17 @@ It also contains a function to load the ipython-sql extension and establish a co
 It is meant to be used by other classes or scripts that require similar functionality.
 
 Functions:
-    save_path:    Constructs a file path based on the provided subdirectories and an optional parent directory
-    open_pgn:     Opens a dialog box to let users choose a .pgn file
-    to_dataframe: Converts the generated data to a pandas DataFrame, sorts it, and optionally saves it to a SQLite database table and/or a CSV file
+    save_path:        Constructs a file path based on the provided subdirectories and an optional parent directory
+    open_pgn:         Opens a dialog box to let users choose a .pgn file
+    create_dataframe: Creates a pandas DataFrame from a list of positions and a PGN object.
+    to_parquet:       Save a pandas DataFrame as a Parquet file with a given file name and directory.
+    from_parquet:     Read a Parquet file and return it as a pandas DataFrame.
 '''
 
-from   IPython            import get_ipython
 from   typing             import *
 from   tkinter            import Tk
 from   tkinter.filedialog import askopenfilename
 import pandas             as pd
-import sqlite3            as sq
 import os
 
 def save_path(use_parent: bool, 
@@ -56,47 +56,74 @@ def open_pgn():
     return file_path
 
 
-# def to_dataframe(data:      Dict[str, Any], 
-#                  by:        Optional[List[str]] = None, 
-#                  ascending: bool                = True,
-#                  add_id:    bool                = True, 
-#                  filename:  Optional[str]       = None,
-#                  sql_table: Optional[str]       = None) \
-#                 -> pd.DataFrame:
-#     '''
-#     Return a pandas DataFrame representation of the data dictionary object.
-#     Optionally save the DataFrame to a CSV file if the filename is provided.
+def create_dataframe(positions, pgn) \
+                    -> pd.DataFrame:
+    '''
+    Creates a pandas DataFrame from a list of positions and a PGN object.
 
-#     Args:
-#         data:      The data to be converted to a DataFrame.
-#         by:        Column(s) to sort the DataFrame by (optional).
-#         ascending: Sort order for the specified columns (optional, default: True).
-#         add_id:    Whether to add an id column (optional, default: True).
-#         filename:  Name of the CSV file to save the DataFrame to (optional).
-#         sql_table: Name of the SQL table to save the DataFrame to (optional).
+    This function iterates through the given positions and extracts relevant information, such as the
+    game hash, PGN string, move number, and bitboard integers. The resulting DataFrame can be used for
+    storage, analysis, or matching.
 
-#     Returns:
-#         The sorted DataFrame with an id column added (if specified).
-    
-#     Considerations:
-#         An id column is added with monotonically increasing integers starting from 1 to facilitate record identification and improve query performance.
-#         If ascending is skipped, the function will apply the default True to all columns in the by argument
-#     '''
-#     df = pd.DataFrame(data)
-#     if by:
-#         df = df.sort_values(by        = by, 
-#                             ascending = ascending)
+    Args:
+        positions (List[Position]): A list of Position objects representing the positions in the game.
+        pgn (Parser): The Parser object containing the PGN file and related methods.
 
-#     if add_id:
-#         df.insert(0, 'id', range(1, len(df) + 1))
+    Returns:
+        pd.DataFrame: A DataFrame containing the extracted information from the positions and PGN object.
+    '''
 
-#     if filename:
-#         df.to_csv(filename, index = False)
-
-#     if sql_table:
-#         df.to_sql(sql_table, 
-#                   sq.connect(),
-#                   if_exists = 'replace', 
-#                   index     = False)
+    game_hash  = pgn.generate_game_hash(positions)
+    pgn_string = str(pgn.get_game())
         
-#     return df
+    data = [{"id"          : game_hash,
+             "pgn"         : pgn_string,
+             "move_number" : i.get_move_number(),
+             "bitboards"   : i.get_bitboard_integers()
+
+            } for i in positions]
+
+    return pd.DataFrame(data)
+
+
+def to_parquet(data:         pd.DataFrame, 
+               parquet_name: str,
+               parquet_dir:  str,
+               append:       bool = True):
+    '''
+    Save a pandas DataFrame as a Parquet file with a given file name and directory.
+
+    Args:
+        data:         The pandas DataFrame to save as a Parquet file.
+        parquet_name: The name of the Parquet file.
+        parquet_dir:  The directory to save the Parquet file.
+
+    For the MVP, this does not actually append data, but a production version would require that.
+    '''
+
+    # Create the Parquet directory if it doesn't exist
+    if not os.path.exists(parquet_dir):
+        os.makedirs(parquet_dir)
+    
+    parquet_file_path = os.path.join(parquet_dir, parquet_name)
+    data.to_parquet(parquet_file_path)
+
+
+def from_parquet(parquet_name, parquet_dir):
+    '''
+    Read a Parquet file and return it as a pandas DataFrame.
+
+    Args:
+        parquet_name: The name of the Parquet file.
+        parquet_dir:  The directory where the Parquet file is located.
+
+    Returns:
+        A pandas DataFrame containing the data from the Parquet file.
+    '''
+    
+    parquet_file_path = os.path.join(parquet_dir, parquet_name)
+
+    if not os.path.exists(parquet_file_path):
+        raise FileNotFoundError(f"File '{parquet_file_path}' not found.")
+
+    return pd.read_parquet(parquet_file_path)

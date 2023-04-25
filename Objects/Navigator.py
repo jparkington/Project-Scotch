@@ -49,6 +49,7 @@ class Navigator:
                  positions: List[Position],
                  metadata:  dict,
                  source:    str):
+        
         self.positions   = positions
         self.metadata    = metadata
         self.source      = source
