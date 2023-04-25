@@ -3,7 +3,7 @@ Author:        James Parkington
 Created Date:  4/15/2023
 Modified Date: 4/24/2023
 
-Tests for the Parser, Position, Navigator, and Matcher classes
+Tests for the Parser, Position, Navigator, and Matcher classes, as well as the save_path and __call__ functionsused in the Application file.
 
 This test suite assumes that you employ the same folder structure as the repo
 if you attempt to test any of the Parquet functions in Utilities.py. Note that some of these tests
@@ -23,7 +23,7 @@ import tkinter as tk
 import unittest
 
 
-class TestParser(unittest.TestCase):
+class TestParserAndApplication(unittest.TestCase):
 
     def setUp(self):
         self.parser = Parser(save_path(True, "Games", "sample.pgn"))
