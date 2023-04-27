@@ -20,6 +20,7 @@ from   tkinter            import Tk
 from   tkinter.filedialog import askopenfilename
 import pandas             as pd
 import os
+import sys
 
 def save_path(use_parent: bool, 
               *subdirs:   str) \
@@ -54,6 +55,23 @@ def open_pgn():
     file_path = askopenfilename(title="Select a PGN file", filetypes=[("PGN files", "*.pgn")])
     root.destroy()
     return file_path
+
+
+def load_pgn_file():
+    '''
+    Load a PGN file either from a command-line argument or through a file dialog.
+
+    Returns:
+        Optional[str]: The path to the selected PGN file or None if no file is selected.
+    '''
+
+    pgn_path = sys.argv[1] if len(sys.argv) > 1 else open_pgn()
+
+    if not pgn_path:
+        print("No file selected.")
+        return None
+    
+    return pgn_path
 
 
 def create_dataframe(positions, pgn) \
