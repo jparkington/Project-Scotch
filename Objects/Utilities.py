@@ -224,7 +224,7 @@ class Utility:
             print(f"File '{pq_path}' not found. Please select a Parquet file.")
             pq_path = self.open_file("parquet")
 
-        return dd.read_parquet(pq_path, columns = columns, filters=[('year', '>', '0')]) if pq_path else None
+        return dd.read_parquet(pq_path, columns = columns, filters = [('year', '>', '0')]) if pq_path else None
     
 
     def __call__(self):
