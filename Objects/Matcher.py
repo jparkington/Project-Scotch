@@ -108,8 +108,6 @@ class Matcher:
             return self.set_match(None, None, 0)
 
         def find_sequences():
-            games_processed = 0
-            max_seq_so_far  = 0
             for g, i, j in it.product(games.values(), range(num_positions), range(num_games)):
                 if j >= len(g):
                     continue
@@ -118,11 +116,6 @@ class Matcher:
                           zip(it.count(i), it.count(j))))
 
                 yield g.iloc[0]['pgn'], [(i, i + seq - 1), (j, j + seq - 1)], seq
-
-                max_seq_so_far = max(seq, max_seq_so_far)
-                games_processed += 1
-                if games_processed % 10000 == 0:
-                    print(f"Processed {games_processed} games. Max sequence so far: {max_seq_so_far}")
 
                 if len(positions) - i <= seq:
                     break
