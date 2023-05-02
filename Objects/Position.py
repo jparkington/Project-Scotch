@@ -7,8 +7,10 @@ File containing the implementation of the Position class for representing
 chess positions in a chess game analysis tool.
 '''
 
-from   typing import *
+from   typing    import *
+from   functools import lru_cache
 import chess
+import numpy as np
 
 class Position:
     '''
@@ -26,7 +28,6 @@ class Position:
         from_chess_board():      Creates a Position object from a python-chess Board object.
         get_board():             Generates a 2D list representing the board state at a given ply.
         get_bitboard_integers(): Returns a list of the integer resolutions of each bitstring for a given position.
-        get_bitboard_strings():  Returns the bitboards for each piece in the position as a multiline string.
         convert_piece_symbol():  Converts a python-chess piece symbol to the corresponding Unicode symbol.
         __str__():               Returns a textual representation of the board state at a given ply for easy visualization.
 
@@ -160,6 +161,7 @@ class Position:
         self.set_bitboards(bitboards)
 
 
+    @lru_cache(maxsize = 12)
     def convert_piece_symbol(self, symbol: str) -> str:
         '''
         Converts a python-chess piece symbol to the corresponding Unicode symbol.
@@ -172,7 +174,7 @@ class Position:
         else:
             return {'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'}[symbol]
         
-        
+    @lru_cache(maxsize = 100)    
     def get_board(self) -> List[List[str]]:
         '''
         Generates a 2D list representing the board state at a given ply.
@@ -194,26 +196,9 @@ class Position:
     def get_bitboard_integers(self):
         '''
         Returns a list of the integer resolutions of each bitstring for a given position.
-
-        A production version of this would not convert to strings, but would instead use a performant data type for Parquet storage.
         '''
 
-        return [str(bitboard) for bitboard in self.get_bitboards().values()]
-    
-
-    def get_bitboard_strings(self, full_bitstrings: bool = False) -> str:
-        '''
-        Returns the bitboards for each piece in the position as a multiline string.
-
-        Args:
-            full_bitstrings: If True, returns the full integer bitstrings. 
-                             If False (default), returns the binary representation of the bitstrings.
-        '''
-
-        bitboard_strings = [f"{piece}: {bin(bitboard)[2:].zfill(64)if full_bitstrings else str(bitboard)}"
-                            for piece, bitboard in self.get_bitboards().items()]
-
-        return "\n".join(bitboard_strings)
+        return [np.uint64(bitboard) for bitboard in self.get_bitboards().values()]
  
 
     def __str__(self) -> str:
