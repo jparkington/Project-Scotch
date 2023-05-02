@@ -11,10 +11,7 @@ and relevant information in a chess game analysis tool.
 from Parser           import *
 from Utilities        import *
 from typing           import *
-from dask.diagnostics import ProgressBar
 import itertools    as it
-import dask         as dk
-import dask.delayed as delayed
 
 class Matcher:
     '''
@@ -43,7 +40,7 @@ class Matcher:
         self.positions   = parser.get_positions()
         self.match       = None
         self.exact_match = False
-        self.storage     = files.from_parquet(columns = ['id', 'bitboards', 'pgn'])
+        self.storage     = files.from_parquet()
 
     def get_parser(self):
         return self.parser
@@ -68,8 +65,8 @@ class Matcher:
 
     def set_exact_match(self, exact_match):
         self.exact_match = exact_match
-    
-    
+
+
     def find_match(self) -> Tuple[Optional[Parser], Optional[List[Tuple[int, int]]], int]:
         '''
         Finds the best matching game based on the longest sequence of matching moves.
@@ -100,36 +97,38 @@ class Matcher:
 
         positions     = self.get_positions()
         unique_ids    = set(self.storage['id'])
+        games         = {id: self.storage.groupby('id').get_group(id).compute() for id in unique_ids}
         num_positions = len(positions)
+        num_games     = len(games)
 
         game_id = self.parser.generate_id(self.positions)
-        if game_id in unique_ids:
-            game = self.storage[self.storage['id'] == game_id].compute()
-            self.handle_exact_match(Parser(game.iloc[0]['pgn'], False))
+        if game_id in games:
+            self.handle_exact_match(Parser(games[game_id].iloc[0]['pgn'], False))
+            self.set_exact_match(True)
             return self.set_match(None, None, 0)
 
-        def find_sequence(g, i, j):
-            g_filtered = g[g['index'] == j].compute()
-            if not g_filtered.empty:
-                bb = g_filtered.iloc[0]['bitboards'].tolist()
-                seq = sum(1 for _ in it.takewhile(lambda k: positions[i+k].get_bitboard_integers() == bb,
-                                                range(min(num_positions - i, len(g) - j))))
-                return seq
-            return 0
+        def find_sequences():
+            games_processed = 0
+            max_seq_so_far  = 0
+            for g, i, j in it.product(games.values(), range(num_positions), range(num_games)):
+                if j >= len(g):
+                    continue
 
-        results = []
-        for idx, id in enumerate(unique_ids, start=1):
-            print(f"Processing game {idx} out of {len(unique_ids)}")
-            g = self.storage[self.storage['id'] == id]
-            max_seq = delayed(max)((delayed(find_sequence)(g, i, j) for i in range(num_positions) for j in range(len(g))), default=0)
-            pgn = g['pgn'].compute().iloc[0]
-            results.append((pgn, max_seq))
-        
-        with ProgressBar():
-            best_seq = dk.compute(*results)
+                seq = sum(1 for _ in it.takewhile(lambda ij: positions[ij[0]].get_bitboard_integers() == g.loc[ij[1]]['bitboards'].tolist(),
+                          zip(it.count(i), it.count(j))))
 
-        max_value = max(best_seq, key=lambda x: x[1])
-        self.set_match(Parser(max_value[0], False), None, max_value[1])
+                yield g.iloc[0]['pgn'], [(i, i + seq - 1), (j, j + seq - 1)], seq
+
+                max_seq_so_far = max(seq, max_seq_so_far)
+                games_processed += 1
+                if games_processed % 10000 == 0:
+                    print(f"Processed {games_processed} games. Max sequence so far: {max_seq_so_far}")
+
+                if len(positions) - i <= seq:
+                    break
+
+        best_seq = max(find_sequences(), key = lambda x: x[2])
+        self.set_match(Parser(best_seq[0], False), best_seq[1], best_seq[2])
 
     
     def handle_exact_match(self, 
