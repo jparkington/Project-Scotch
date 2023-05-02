@@ -19,12 +19,12 @@ class Matcher:
     matching games and relevant information in a chess game analysis tool.
 
     Attributes:
-        files       (Utility): A Utility object containing the pq_dir and pq_name for finding the games for comparison.
-        parser      (Parser):  A Parser object containing a game to be compared against a Parquet storage of games.
-        positions   (List):    The sequence of Position objects captured within the supplied Parser object.
-        match       (Tuple):   A tuple with a Parser object, coordinates, and sequence for the game with the longest matching sequence to parser.
-        exact_match (bool):    Whether or not the submitted parser already matches a game in storage.
-        games       (Dict):    Contains game ids as keys and their corresponding DataFrames as values using the Parquet source from files.
+        files       (Utility):   A Utility object containing the pq_dir and pq_name for finding the games for comparison.
+        parser      (Parser):    A Parser object containing a game to be compared against a Parquet storage of games.
+        positions   (List):      The sequence of Position objects captured within the supplied Parser object.
+        match       (Tuple):     A tuple with a Parser object, coordinates, and sequence for the game with the longest matching sequence to parser.
+        exact_match (bool):      Whether or not the submitted parser already matches a game in storage.
+        storage     (DataFrame): Contains a large DataFrame of all games in Storage.
 
     Methods:
         find_match(): Finds the best matching game based on the longest sequence of matching moves.
@@ -156,7 +156,6 @@ class Matcher:
                 f" The longest matching sequence starts{(' from the beginning' if start_move == 0 else f' with {start_match.get_move_notation()} at move {start_move}')}"
                 f" and continues for {match_info[2]} ply to {end_match.get_move_notation()} at move {end_match.get_move_number()}.")
     
-
     def __call__(self, 
                  print_result: bool = True):
         '''
