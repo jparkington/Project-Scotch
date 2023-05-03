@@ -113,7 +113,7 @@ class Utility:
                    is_parser:   bool = True,
                    append:      bool = True,
                    write:       bool = True,
-                   partitions:  List = ['year'],
+                   partitions:  List = ["first_8_boards"],
                    target_size: int  = 64 * 1024 * 1024):
         '''
         Save a Dask DataFrame as a Parquet file with a given file name and directory.
@@ -123,14 +123,14 @@ class Utility:
             is_parser:   A flag indicating if the input_df is a Parser object. Defaults to True.
             append:      If True, appends the DataFrame to an existing Parquet file, if it exists. Defaults to True.
             write:       If True, proceeds to write the resulting DataFrame to the object's pq_path
-            partitions:  A list of column names to partition the data by. Defaults to ["year"].
+            partitions:  A list of column names to partition the data by. Defaults to ["first_8_boards"].
             target_size: The desired partition size for the output Parquet file in bytes. Defaults to 64 * 1024 * 1024.
         '''
 
         try:
             df = self.create_dataframe(input).dropna(subset = partitions) if is_parser else input
-            if isinstance(df, dd.DataFrame) and df.shape[0].compute() > 0:
-
+            if isinstance(df, dd.DataFrame) and df.npartitions > 0:
+                
                 df = df.repartition(npartitions = int(df.memory_usage(deep = True).sum().compute() / target_size))
 
                 if write:
@@ -144,8 +144,7 @@ class Utility:
                                   compression         = "snappy",
                                   append              = append,
                                   ignore_divisions    = True)
-
-                return df.compute()
+                return df
 
         except Exception as e:
             print(f"Error while writing Parquet file: {e}")
@@ -165,16 +164,18 @@ class Utility:
         '''
     
         positions  = parser.get_positions()
-        year       = parser.get_metadata().get("Date", "").split(".")[0]
         game_id    = parser.generate_id(positions)
         pgn_string = str(parser.get_game())
 
-        delayed_data = [dk.delayed(pd.DataFrame({"id"          : game_id,
-                                                 "year"        : year,
-                                                 "pgn"         : pgn_string,
-                                                 "move_number" : i.get_move_number(),
-                                                 "bitboards"   : i.get_bitboard_integers()}))
-                        for i in positions]
+        delayed_data = [dk.delayed(pd.DataFrame({"id"             : game_id,
+                                                 "pgn"            : pgn_string,
+                                                 "first_8_boards" : sum(i.get_bitboard_integers()[:8]),
+                                                 "ply"            : ply,
+                                                 "move_number"    : i.get_move_number(),
+                                                 "bitboards"      : i.get_bitboard_integers(),
+                                                 "bitboard_sum"   : sum(i.get_bitboard_integers())}))
+
+                        for ply, i in enumerate(positions)]
 
         return dd.from_delayed(delayed_data)
 
