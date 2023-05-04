@@ -8,10 +8,10 @@ positions with a database of existing games and returning the best matching game
 and relevant information in a chess game analysis tool.
 '''
 
-from Parser           import *
-from Utilities        import *
-from typing           import *
-import itertools    as it
+from Parser      import *
+from Utilities   import *
+from typing      import *
+import itertools as it
 
 class Matcher:
     '''

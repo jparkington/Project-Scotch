@@ -8,12 +8,13 @@ saving and reading data from Parquet files, and constructing file paths. It is m
 scripts that require similar functionality.
 '''
 
-from   Parser             import *
-from   typing             import *
-from   tkinter            import filedialog
-import dask.dataframe     as dd
-import dask               as dk
-import pandas             as pd
+from   Parser         import *
+from   typing         import *
+from   tkinter        import filedialog
+import dask.dataframe as dd
+import dask           as dk
+import numpy          as np
+import pandas         as pd
 import os
 import sys
 
@@ -113,7 +114,7 @@ class Utility:
                    is_parser:   bool = True,
                    append:      bool = True,
                    write:       bool = True,
-                   partitions:  List = ["first_8_boards"],
+                   partitions:  List = ["first_moves"],
                    target_size: int  = 64 * 1024 * 1024):
         '''
         Save a Dask DataFrame as a Parquet file with a given file name and directory.
@@ -122,16 +123,15 @@ class Utility:
             input:       The Parser object to convert to a DataFrame, or an existing DataFrame, to save as a Parquet file.
             is_parser:   A flag indicating if the input_df is a Parser object. Defaults to True.
             append:      If True, appends the DataFrame to an existing Parquet file, if it exists. Defaults to True.
-            write:       If True, proceeds to write the resulting DataFrame to the object's pq_path
-            partitions:  A list of column names to partition the data by. Defaults to ["first_8_boards"].
+            write:       If True, proceeds to write the resulting DataFrame to the object's pq_path.
+            partitions:  A list of column names to partition the data by.
             target_size: The desired partition size for the output Parquet file in bytes. Defaults to 64 * 1024 * 1024.
         '''
 
         try:
             df = self.create_dataframe(input).dropna(subset = partitions) if is_parser else input
             if isinstance(df, dd.DataFrame) and df.npartitions > 0:
-                
-                df = df.repartition(npartitions = int(df.memory_usage(deep = True).sum().compute() / target_size))
+                df = df.repartition(npartitions = max(int(df.memory_usage(deep = True).sum().compute() / target_size), 1))
 
                 if write:
                     file_exists = os.path.exists(self.get_pq_path())
@@ -163,17 +163,20 @@ class Utility:
             parser (Parser): The Parser object containing the PGN file and related methods.
         '''
     
-        positions  = parser.get_positions()
-        game_id    = parser.generate_id(positions)
-        pgn_string = str(parser.get_game())
+        positions   = parser.get_positions()
+        game_id     = parser.generate_id(positions)
+        pgn_string  = str(parser.get_game())
+        first_moves = '-'.join([p.get_move_notation() for p in positions[1:4]])
+        total_ply   = len(positions)
 
-        delayed_data = [dk.delayed(pd.DataFrame({"id"             : game_id,
-                                                 "pgn"            : pgn_string,
-                                                 "first_8_boards" : sum(i.get_bitboard_integers()[:8]),
-                                                 "ply"            : ply,
-                                                 "move_number"    : i.get_move_number(),
-                                                 "bitboards"      : i.get_bitboard_integers(),
-                                                 "bitboard_sum"   : sum(i.get_bitboard_integers())}))
+        delayed_data = [dk.delayed(pd.DataFrame({"id"          : game_id,
+                                                 "pgn"         : pgn_string,
+                                                 "first_moves" : first_moves,
+                                                 "total_ply"   : total_ply,
+                                                 "ply"         : ply,
+                                                 "move_number" : i.get_move_number(),
+                                                 "bitboards"   : i.get_bitboard_integers(),
+                                                 "board_sum"   : sum(i.get_bitboard_integers(), np.uint64(0))}))
 
                         for ply, i in enumerate(positions)]
 
@@ -206,7 +209,7 @@ class Utility:
             
             if dataframes:
                 concatenated_df = dd.concat(dataframes)
-                self.to_parquet(concatenated_df, is_parser = False, write = True)
+                self.to_parquet(concatenated_df, is_parser = False)
             
             print(f"Completed processing PGN file: {path}")
 

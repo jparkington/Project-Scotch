@@ -30,19 +30,18 @@ def main():
         for i in range(0, len(file_list), chunk_size):
             yield file_list[i:i + chunk_size]
 
-    utility = Utility('config')
     if __name__ == "__main__":
         dir_path = "/Users/Macington/Documents/Roux/Downloaded"
         all_files = [os.path.join(dir_path, file) for file in os.listdir(dir_path) if file.endswith('.pgn')]
         
         for chunk in process_files_in_chunks(all_files, 50):
             for file_path in chunk:
-                files = Utility(file_path)
-                files.archive_multipgn()
+                Utility(pgn_path = file_path).archive_multipgn()
             
             # Clear any unreferenced objects and run garbage collection
             del chunk
             gc.collect()
+
 
     # Before running this, sort out partition strategy
 

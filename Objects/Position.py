@@ -9,8 +9,8 @@ chess positions in a chess game analysis tool.
 
 from   typing    import *
 from   functools import lru_cache
+import numpy     as np
 import chess
-import numpy as np
 
 class Position:
     '''

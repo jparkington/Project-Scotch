@@ -11,7 +11,7 @@ from   Parser    import *
 from   typing    import List
 from   itertools import *
 from   datetime  import datetime
-import tkinter as tk
+import tkinter    as tk
 
 class Navigator:
     '''
