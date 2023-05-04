@@ -213,14 +213,35 @@ class Utility:
             
             print(f"Completed processing PGN file: {path}")
 
-    
-    def from_parquet(self, columns = None) -> dd.DataFrame:
         '''
-        Reads a Parquet directory and returns it as a Dask DataFrame.
+        # This addendum allows for large directories of files to be looped through efficiently when running archive_multipgn
+        import os
+        import gc
 
-        Args:
-            parquet_name: The name of the Parquet file. Defaults to "Storage".
-            parquet_dir:  The directory where the Parquet file is located. Defaults to save_path(True, "Games").
+        def process_files_in_chunks(file_list, chunk_size):
+            for i in range(0, len(file_list), chunk_size):
+                yield file_list[i:i + chunk_size]
+
+        if __name__ == "__main__":
+            dir_path = "/Users/Macington/Documents/Roux/Downloaded"
+            all_files = [os.path.join(dir_path, file) for file in os.listdir(dir_path) if file.endswith('.pgn')]
+            
+            for chunk in process_files_in_chunks(all_files, 50):
+                for file_path in chunk:
+                    Utility(pgn_path = file_path).archive_multipgn()
+                
+                # Clear any unreferenced objects and run garbage collection
+                del chunk
+                gc.collect()
+        '''
+
+    
+    def from_parquet(self, 
+                     columns    = None,
+                     partitions = None) \
+                     -> dd.DataFrame:
+        '''
+        Reads a Parquet directory and returns it as a Dask DataFrame, with optional columm and partition selection
         '''
 
         pq_path = self.get_pq_path()
@@ -228,7 +249,13 @@ class Utility:
             print(f"File '{pq_path}' not found. Please select a Parquet file.")
             pq_path = self.open_file("parquet")
 
-        return dd.read_parquet(pq_path, columns = columns, filters = [('year', '>', '0')]) if pq_path else None
+        pq_path = self.get_pq_path()
+        if not os.path.exists(pq_path): 
+            print(f"File '{pq_path}' not found. Please select a Parquet file.")
+            pq_path = self.open_file("parquet")
+
+        filters = [('partitions', 'in', partitions)] if partitions else None
+        return dd.read_parquet(pq_path, columns = columns, filters = filters) if pq_path else None
     
 
     def __call__(self):

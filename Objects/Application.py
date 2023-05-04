@@ -6,52 +6,45 @@ Modified Date: 4/22/2023
 File containing a demonstration of the PGN class usage for parsing a PGN file
 and interacting with the Position and Piece classes in a chess game analysis tool.
 '''
-import time
+import threading
 from Matcher   import *
 from Navigator import *
 from Parser    import *
 from Utilities import *
 
+def run_with_timeout(func, timeout):
+        def stop_program():
+            print(f"Program terminated after {timeout} minutes.")
+            sys.exit(0)
+
+        timer = threading.Timer(timeout * 60, stop_program)
+        timer.start()
+        try:
+            func()
+        finally:
+            timer.cancel()
 
 def main():
-    # start = time.time()
-    # files  = Utility()
-    # parser = Parser(files())
-    # match  = Matcher(files, parser)()
-    # Navigator(parser, match[0], match[1])()
 
-    # elapsed_time = time.time() - start
-    # print(f"Elapsed time: {elapsed_time:.2f} seconds")
-
-    import os
-    import gc
-
-    def process_files_in_chunks(file_list, chunk_size):
-        for i in range(0, len(file_list), chunk_size):
-            yield file_list[i:i + chunk_size]
-
-    if __name__ == "__main__":
-        dir_path = "/Users/Macington/Documents/Roux/Downloaded"
-        all_files = [os.path.join(dir_path, file) for file in os.listdir(dir_path) if file.endswith('.pgn')]
-        
-        for chunk in process_files_in_chunks(all_files, 50):
-            for file_path in chunk:
-                Utility(pgn_path = file_path).archive_multipgn()
-            
-            # Clear any unreferenced objects and run garbage collection
-            del chunk
-            gc.collect()
-
-
-    # Before running this, sort out partition strategy
+    files  = Utility()
+    parser = Parser(files())
+    match  = Matcher(files, parser)()
+    Navigator(parser, match[0], match[1])()
 
 if __name__ == "__main__":
-    main()
+    run_with_timeout(main, 120)
 
 
-# Explore a partitioning structure where the first X moves are in progressive sub-directories, instead of partioning on year, which is meaningless for the analysis
-# How big should X be? First idea is that it should be at least as long as any legal chess game (e.g. 8 ply). Is there justification for going deeper?
-# Any merit to naming the directories with the bitboard sums vs. strings of move notations? What's better/faster for exploration and retrieval? Since the existing logic uses bitboard matches, maybe that can facilitate faster matching inside the Matcher class, since the logic would be crawling through these same directories anyway.
-# Notes for Matcher
-# Can I get away with matching/writing bitboard sums as I write with ply for the sake of faster sequencing? I think that's worth exploring.
-# See if lru_cahching is useful at all in the Matcher class
+# Can a better sequence searching algorithm be used?
+# Move unique_ids into an initialized argument, so it can be used in both find_match and the handle_exact_method logic
+# After that, move no storage and exact match logic directly into __call__
+# Simplify their code structure by making the default for match (None, None 0), instead of just None (if safe to do so)
+
+# Isn't this supposed to use lru caching or something?
+# Shouldn't this be using indexed fields and not just matching unindexed?
+# It doesn't seem like this is using the partition names at all to help guide and simplify the initial search process
+# Ideally, the initial search process grabs at least a sequence number to work with, which then allows us to filter out all games with a ply lower than that sequence, before peforming a second round of lcs
+# I don't see memoization hereor pre-processing
+# Is there a better way to grab all of the unique IDs rather than using compute so much?
+
+# Do we have too many partitions at too small of a file size? Maybe the first two moves should be the partition directory?
