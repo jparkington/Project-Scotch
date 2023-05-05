@@ -169,4 +169,4 @@ class Parser:
         be used as a game identifier, allowing for efficient matching and comparison of games.
         '''
 
-        return sum(j for i in positions for j in i.get_bitboard_integers()) + len(positions)
+        return sum(i.get_bitboard_integers() for i in positions) + len(positions)

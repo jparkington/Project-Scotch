@@ -114,7 +114,7 @@ class Utility:
                    is_parser:   bool = True,
                    append:      bool = True,
                    write:       bool = True,
-                   partitions:  List = ["first_moves"],
+                   partitions:  List = ["total_ply"],
                    target_size: int  = 64 * 1024 * 1024):
         '''
         Save a Dask DataFrame as a Parquet file with a given file name and directory.
@@ -166,17 +166,14 @@ class Utility:
         positions   = parser.get_positions()
         game_id     = parser.generate_id(positions)
         pgn_string  = str(parser.get_game())
-        first_moves = '-'.join([p.get_move_notation() for p in positions[1:4]])
         total_ply   = len(positions)
 
-        delayed_data = [dk.delayed(pd.DataFrame({"id"          : game_id,
-                                                 "pgn"         : pgn_string,
-                                                 "first_moves" : first_moves,
-                                                 "total_ply"   : total_ply,
-                                                 "ply"         : ply,
-                                                 "move_number" : i.get_move_number(),
-                                                 "bitboards"   : i.get_bitboard_integers(),
-                                                 "board_sum"   : sum(i.get_bitboard_integers(), np.uint64(0))}))
+        delayed_data = [dk.delayed(pd.DataFrame({"game_id"   : game_id,
+                                                 "pgn"       : pgn_string,
+                                                 "total_ply" : total_ply,
+                                                 "ply"       : ply,
+                                                 "board_sum" : i.get_bitboard_integers()}, 
+                                                 index = [game_id * 100000 + ply]))
 
                         for ply, i in enumerate(positions)]
 

@@ -23,7 +23,6 @@ class Matcher:
         parser      (Parser):    A Parser object containing a game to be compared against a Parquet storage of games.
         positions   (List):      The sequence of Position objects captured within the supplied Parser object.
         match       (Tuple):     A tuple with a Parser object, coordinates, and sequence for the game with the longest matching sequence to parser.
-        exact_match (bool):      Whether or not the submitted parser already matches a game in storage.
         storage     (DataFrame): Contains a large DataFrame of all games in Storage.
 
     Methods:
@@ -39,7 +38,6 @@ class Matcher:
         self.parser      = parser
         self.positions   = parser.get_positions()
         self.match       = None
-        self.exact_match = False
         self.storage     = files.from_parquet()
 
     def get_parser(self):
@@ -50,9 +48,6 @@ class Matcher:
     
     def get_match(self):
         return self.match
-
-    def get_exact_match(self):
-        return self.exact_match
     
     def set_parser(self, parser):
         self.parser = parser
@@ -62,9 +57,6 @@ class Matcher:
 
     def set_match(self, parser, indices, seq):
         self.match = (parser, indices, seq)
-
-    def set_exact_match(self, exact_match):
-        self.exact_match = exact_match
 
 
     def find_match(self) -> Tuple[Optional[Parser], Optional[List[Tuple[int, int]]], int]:
@@ -96,16 +88,9 @@ class Matcher:
             return self.set_match(None, None, 0)
 
         positions     = self.get_positions()
-        unique_ids    = set(self.storage['id'])
         games         = {id: self.storage.groupby('id').get_group(id).compute() for id in unique_ids}
         num_positions = len(positions)
         num_games     = len(games)
-
-        game_id = self.parser.generate_id(self.positions)
-        if game_id in games:
-            self.handle_exact_match(Parser(games[game_id].iloc[0]['pgn'], False))
-            self.set_exact_match(True)
-            return self.set_match(None, None, 0)
 
         def find_sequences():
             for g, i, j in it.product(games.values(), range(num_positions), range(num_games)):
@@ -122,17 +107,6 @@ class Matcher:
 
         best_seq = max(find_sequences(), key = lambda x: x[2])
         self.set_match(Parser(best_seq[0], False), best_seq[1], best_seq[2])
-
-    
-    def handle_exact_match(self, 
-                           parser:  Parser):
-        '''
-        Handles exact matches by printing a message with relevant information about the matching game.
-        '''
-
-        metadata = parser.get_metadata()
-        self.set_exact_match(True)
-        print(f"This game is an exact match of {metadata.get('White', '')} vs. {metadata.get('Black', '')} in {metadata.get('Date', '').split('.')[0]} in our database.")
     
 
     def __str__(self) -> str:

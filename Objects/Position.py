@@ -27,7 +27,7 @@ class Position:
         apply_move():            Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
         from_chess_board():      Creates a Position object from a python-chess Board object.
         get_board():             Generates a 2D list representing the board state at a given ply.
-        get_bitboard_integers(): Returns a list of the integer resolutions of each bitstring for a given position.
+        get_bitboard_integers(): Returns a list or sum of the integer resolutions of each bitstring for a given position.
         convert_piece_symbol():  Converts a python-chess piece symbol to the corresponding Unicode symbol.
         __str__():               Returns a textual representation of the board state at a given ply for easy visualization.
 
@@ -193,12 +193,18 @@ class Position:
         return board
     
         
-    def get_bitboard_integers(self):
+    def get_bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
         '''
-        Returns a list of the integer resolutions of each bitstring for a given position.
+        Returns either a list of the integer resolutions of each bitstring for a given position or 
+        the sum of all bitboards in the list as a single uint64 integer, based on the board_sum argument.
         '''
 
-        return [np.uint64(bitboard) for bitboard in self.get_bitboards().values()]
+        bitboard_integers = [np.uint64(bitboard) for bitboard in self.get_bitboards().values()]
+
+        if board_sum:
+            return sum(bitboard_integers, np.uint64(0))
+
+        return bitboard_integers
  
 
     def __str__(self) -> str:
