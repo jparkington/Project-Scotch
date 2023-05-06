@@ -13,7 +13,6 @@ from   typing         import *
 from   tkinter        import filedialog
 import dask.dataframe as dd
 import dask           as dk
-import numpy          as np
 import pandas         as pd
 import os
 import sys
@@ -24,9 +23,10 @@ class Utility:
     saving and reading data from Parquet files, and constructing file paths. Requires creating an instance of the class to use its methods.
 
     Attributes:
-        pgn_path (str): The path to the PGN file.
-        pq_name  (str): The name of the Parquet file.
-        pq_dir   (str): The directory to save the Parquet file.
+        pgn_path      (str): The path to the PGN file.
+        pq_dir        (str): The directory to save the Parquet file.
+        pq_name       (str): The name of the Parquet file.
+        partition_col (str): The name of the column used for partitioning the Parquet file. Defaults to 'total_ply'.
     
     Methods:
         save_path:         Constructs a file path based on the provided subdirectories and an optional parent directory.
@@ -39,12 +39,14 @@ class Utility:
     '''
 
     def __init__(self, 
-                 pgn_path: str = None,
-                 pq_dir:   str = "Games",
-                 pq_name:  str = "Storage"):
+                 pgn_path:      str = None,
+                 pq_dir:        str = "Games",
+                 pq_name:       str = "Storage",
+                 partition_col: str = "total_ply"):
         
-        self.pgn_path = pgn_path or self.get_initial_pgn_path()
-        self.pq_path  = self.get_initial_pq_path(pq_dir, pq_name)
+        self.pgn_path      = pgn_path or self.get_initial_pgn_path()
+        self.pq_path       = self.get_initial_pq_path(pq_dir, pq_name)
+        self.partition_col = partition_col
 
 
     def get_initial_pgn_path(self):
@@ -64,11 +66,17 @@ class Utility:
     def get_pq_path(self):
         return self.pq_path
     
+    def get_partition_col(self):
+        return self.partition_col
+    
     def set_pgn_path(self, pgn_path):
         self.pgn_path = pgn_path
 
     def set_pq_path(self, pq_path):
         self.pq_path = pq_path
+
+    def set_partition_col(self, partition_col):
+        self.partition_col = partition_col
 
 
     def save_path(self,
@@ -114,7 +122,6 @@ class Utility:
                    is_parser:   bool = True,
                    append:      bool = True,
                    write:       bool = True,
-                   partitions:  List = ["total_ply"],
                    target_size: int  = 64 * 1024 * 1024):
         '''
         Save a Dask DataFrame as a Parquet file with a given file name and directory.
@@ -129,7 +136,7 @@ class Utility:
         '''
 
         try:
-            df = self.create_dataframe(input).dropna(subset = partitions) if is_parser else input
+            df = self.create_dataframe(input) if is_parser else input
             if isinstance(df, dd.DataFrame) and df.npartitions > 0:
                 df = df.repartition(npartitions = max(int(df.memory_usage(deep = True).sum().compute() / target_size), 1))
 
@@ -138,7 +145,7 @@ class Utility:
                     if not file_exists and append: append = False
 
                     df.to_parquet(self.get_pq_path(),
-                                  partition_on        = partitions,
+                                  partition_on        = [self.get_partition_col()],
                                   write_metadata_file = True,
                                   engine              = "pyarrow",
                                   compression         = "snappy",
@@ -173,7 +180,7 @@ class Utility:
                                                  "total_ply" : total_ply,
                                                  "ply"       : ply,
                                                  "board_sum" : i.get_bitboard_integers()}, 
-                                                 index = [game_id * 100000 + ply]))
+                                                 index       = [game_id * 100000 + ply]))
 
                         for ply, i in enumerate(positions)]
 
@@ -246,13 +253,10 @@ class Utility:
             print(f"File '{pq_path}' not found. Please select a Parquet file.")
             pq_path = self.open_file("parquet")
 
-        pq_path = self.get_pq_path()
-        if not os.path.exists(pq_path): 
-            print(f"File '{pq_path}' not found. Please select a Parquet file.")
-            pq_path = self.open_file("parquet")
-
-        filters = [('partitions', 'in', partitions)] if partitions else None
-        return dd.read_parquet(pq_path, columns = columns, filters = filters) if pq_path else None
+        filters = [(self.get_partition_col(), 'in', partitions)] if partitions else None
+        return dd.read_parquet(pq_path, 
+                               columns = columns, 
+                               filters = filters) if pq_path else None
     
 
     def __call__(self):
