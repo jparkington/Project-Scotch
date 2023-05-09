@@ -77,15 +77,18 @@ Project Scotch is a Python implementation that utilizes five classes, an Applica
 3. Clone this repository to your local machine.
 4. In the terminal, navigate to the repository's directory.
 5. Run the main Application file using Python, with the following options:
-   - Supply a PGN game as a command-line argument:
-     ```
-     python Application.py /path/to/your/game.pgn
-     ```
-   - Run the application without any arguments to open a file dialog for submitting your own game:
-     ```
-     python Application.py
-     ```
-     If no game is submitted, a demo will run.
+   
+Supply a PGN game as a command-line argument:
+```
+python Application.py /path/to/your/game.pgn
+```
+
+Run the application without any arguments to open a file dialog for submitting your own game:
+```
+python Application.py
+```
+
+If no game is submitted, a demo will run.
 
 ## Authors and Acknowledgements
 
