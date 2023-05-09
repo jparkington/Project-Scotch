@@ -1,7 +1,7 @@
 '''
 Author:        James Parkington
 Created Date:  3/26/2023
-Modified Date: 5/8/2023
+Modified Date: 5/9/2023
 
 File containing the implementation of the Matcher class for comparing user-inputted
 positions with a database of existing games and returning the best matching games

@@ -21,6 +21,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
-# Github repo
-# Display what partition has been processed as "Computed all games X moves or longer. "

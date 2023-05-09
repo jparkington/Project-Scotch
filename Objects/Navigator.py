@@ -1,7 +1,7 @@
 '''
 Author:        James Parkington
 Created Date:  4/23/2023
-Modified Date: 4/25/2023
+Modified Date: 5/9/2023
 
 File containing the implementation of the Navigator class for rendering a list of Position objects
 as an interactive slideshow using tkinter.

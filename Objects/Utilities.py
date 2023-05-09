@@ -1,7 +1,7 @@
 '''
 Author:        James Parkington
 Created Date:  4/15/2023
-Modified Date: 4/28/2023
+Modified Date: 5/9/2023
 
 FIle that provides methods for working with PGN files, generating data, converting it into a pandas DataFrame,
 saving and reading data from Parquet files, and constructing file paths. It is meant to be used by other classes or 
