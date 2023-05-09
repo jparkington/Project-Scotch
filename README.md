@@ -21,7 +21,7 @@ This repository contains a series of classes, a Cython implementation of the Lon
 
 ## Introduction
 
-Project Scotch is an innovative chess analytics tool designed to help users study and improve their chess gameplay by comparing their games to a database of Grandmaster-level games. The tool processes a large dataset of over 7 million chess positions from professional tournament games, sourced from [PGN Mentor](pgnmentor.com). By submitting their own chess game, users can have it matched against the database, enabling them to follow and study a closely resembling game played by a Grandmaster. This unique approach provides users with a deeper understanding of their own gameplay and offers insights on how to learn from the best of the best.
+Project Scotch is an innovative chess analytics tool designed to help users study and improve their chess gameplay by comparing their games to a database of Grandmaster-level games. The tool processes a large dataset of over 7 million chess positions from professional tournament games, sourced from [PGN Mentor](https://www.pgnmentor.com). By submitting their own chess game, users can have it matched against the database, enabling them to follow and study a closely resembling game played by a Grandmaster. This unique approach provides users with a deeper understanding of their own gameplay and offers insights on how to learn from the best of the best.
 
 The project is built on a range of carefully crafted and documented components, which are designed to create an informative and interactive experience for chess learners. Its Position class, utilizing efficient bitboards, serves as the foundation for analyzing chess positions. These positions are generated through a Parser class, which bridges the user's game and the tool by processing PGN files and extracting necessary metadata for integration with other components. From there, the submitted game is run through Matcher, which identifies the best matching games from the database based on the longest sequence of matching moves, offering users the opportunity to learn from top-level players. The Navigator class then handles the visual representation of the match, allowing users to step through positions and gain insights into their gameplay.
 
@@ -51,7 +51,7 @@ The Cython implementation is meant to be used as an imported module in other Pyt
 
 ## Data
 
-The program processes a large dataset containing over 7 million chess positions from professional tournament games as of May 2023. The source material for this dataset comes from [PGN Mentor](pgnmentor.com), a popular resource for chess games in the PGN (Portable Game Notation) format.
+The program processes a large dataset containing over 7 million chess positions from professional tournament games as of May 2023. The source material for this dataset comes from [PGN Mentor](https://www.pgnmentor.com), a popular resource for chess games in the PGN (Portable Game Notation) format.
 
 ### Parquet
 [Parquet](https://parquet.apache.org) is a columnar storage file format optimized for big data processing frameworks like Apache Spark, Apache Hive, and Apache Impala. It is designed to provide efficient data compression and encoding schemes, enabling fast querying of data stored in a columnar fashion. By using the Parquet format, the program can reduce storage space and improve query performance when working with the large dataset of chess positions.
@@ -111,4 +111,4 @@ This project is not subject to any specific licensing. The data provided, PGN Me
 - [Tkinter Documentation](https://docs.python.org/3/library/tkinter.html)
 - [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor)
 - [Chess Library for Python](https://python-chess.readthedocs.io/en/latest/)
-- [Alive Progress Bar](https://github.com/rsalmei/alive-progress)
+- [Alive Progress Bar](https://github.com/rsalmei/alive-progress#readme)
