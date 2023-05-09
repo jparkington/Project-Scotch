@@ -15,15 +15,12 @@ from Utilities import *
 def main():
 
     files  = Utility()
-    # parser = Parser(files())
-    # match  = Matcher(files, parser)()
-    # Navigator(parser, match[0], match[1])()
-
-
+    parser = Parser(files())
+    match  = Matcher(files, parser)()
+    Navigator(parser, match[0], match[1])()
+    
 if __name__ == "__main__":
     main()
 
-'''
-Feedback for Matcher:
-Find a way to see the full Parquet directory as a df in a table (maybe with tkinter or something, since nothing else works)
-'''
+# Github repo
+# Display what partition has been processed as "Computed all games X moves or longer. "

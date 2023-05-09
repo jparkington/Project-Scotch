@@ -8,12 +8,13 @@ saving and reading data from Parquet files, and constructing file paths. It is m
 scripts that require similar functionality.
 '''
 
-from   Parser         import *
-from   typing         import *
-from   tkinter        import filedialog
-import dask.dataframe as dd
-import dask           as dk
-import pandas         as pd
+from   Parser          import *
+from   typing          import *
+from   tkinter         import filedialog
+import dask.dataframe  as dd
+import dask            as dk
+import pandas          as pd
+import pyarrow.parquet as pa
 import os
 import sys
 
@@ -29,13 +30,14 @@ class Utility:
         partition_col (str): The name of the column used for partitioning the Parquet file. Defaults to 'total_ply'.
     
     Methods:
-        save_path:         Constructs a file path based on the provided subdirectories and an optional parent directory.
-        open_pgn:          Opens a dialog box to let users choose a .pgn file.
-        load_pgn_file:     Load a PGN file either from a command-line argument or through a file dialog.
-        to_parquet:        Save a pandas DataFrame as a Parquet file with a given file name and directory.
-        create_dataframe:  Creates a pandas DataFrame from a list of positions and a PGN object.
-        archive_multipgn:  Processes a PGN file with multiple games and appends each game to the parquet storage file.
-        from_parquet:      Read a Parquet file and return it as a pandas DataFrame.
+        get_partition_metadata: Retrieves the id and length of each partition in the Parquet file storage.
+        save_path:              Constructs a file path based on the provided subdirectories and an optional parent directory.
+        open_pgn:               Opens a dialog box to let users choose a .pgn file.
+        load_pgn_file:          Load a PGN file either from a command-line argument or through a file dialog.
+        to_parquet:             Save a pandas DataFrame as a Parquet file with a given file name and directory.
+        create_dataframe:       Creates a pandas DataFrame from a list of positions and a PGN object.
+        archive_multipgn:       Processes a PGN file with multiple games and appends each game to the parquet storage file.
+        from_parquet:           Read a Parquet file and return it as a pandas DataFrame.
     '''
 
     def __init__(self, 
@@ -77,6 +79,36 @@ class Utility:
 
     def set_partition_col(self, partition_col):
         self.partition_col = partition_col
+
+
+    def get_partition_metadata(self):
+        '''
+        Retrieves the id and length of each partition in the Parquet file storage.
+
+        This method iterates through the Parquet file storage and collects metadata for each partition, 
+        including the partition_id and the total number of rows in that partition. The metadata is 
+        stored in a dictionary, with partition_ids as keys and total_rows as values.
+
+        Returns:
+            dict: A dictionary containing metadata for each partition in the Parquet file storage.
+                  Keys are partition_ids and values are the total number of rows in the partition.
+        '''
+
+        partitions = [d for d in os.listdir(self.get_pq_path()) if d.startswith(f'{self.get_partition_col()}=')]
+        metadata   = {}
+
+        for partition_id in sorted([int(p.split('=')[1]) for p in partitions], reverse = True):
+            partition_path = os.path.join(self.get_pq_path(), f'{self.get_partition_col()}={partition_id}')
+            parquet_files = [f for f in os.listdir(partition_path) if f.endswith('.parquet')]
+            total_rows = 0
+
+            for parquet_file in parquet_files:
+                parquet_metadata = pa.read_metadata(os.path.join(partition_path, parquet_file))
+                total_rows += parquet_metadata.num_rows
+
+            metadata[partition_id] = total_rows
+
+        return metadata
 
 
     def save_path(self,
@@ -253,7 +285,13 @@ class Utility:
             print(f"File '{pq_path}' not found. Please select a Parquet file.")
             pq_path = self.open_file("parquet")
 
-        filters = [(self.get_partition_col(), 'in', partitions)] if partitions else None
+        if partitions:
+            if not isinstance(partitions, (list, set, tuple)):
+                partitions = [partitions]
+            filters = [(self.get_partition_col(), 'in', partitions)]
+        else:
+            filters = None
+
         return dd.read_parquet(pq_path, 
                                columns = columns, 
                                filters = filters) if pq_path else None

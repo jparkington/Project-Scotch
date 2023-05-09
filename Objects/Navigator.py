@@ -11,7 +11,7 @@ from   Parser    import *
 from   typing    import List
 from   itertools import *
 from   datetime  import datetime
-import tkinter    as tk
+import tkinter   as tk
 
 class Navigator:
     '''
@@ -248,6 +248,9 @@ class Navigator:
         self.root.bind("<Left>",  self.set_prev_position)
         self.root.bind("<Up>",    self.set_first_position)
         self.root.bind("<Down>",  self.set_end_position)
+        self.root.bind("<space>", self.toggle_game)
+        self.root.bind("c",       self.set_convergence_position)
+        self.root.bind("d",       self.set_divergence_position)
 
         self.display_position()
         self.root.mainloop() 
