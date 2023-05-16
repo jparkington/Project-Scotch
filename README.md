@@ -72,10 +72,10 @@ In the Matcher class, the ThreadPoolExecutor is used to concurrently process mul
 Project Scotch is a Python implementation that utilizes five classes, an Application file, and a Cython module. It is designed to be run directly from the terminal. To set up the project and use it, follow these steps:
 
 1. Install [Python](https://www.python.org/downloads/).
-2. Install the required packages by running the following command in your terminal: `pip install cython numpy pandas dask[complete] pyarrow chess alive-progress tkinter`
+2. Clone this repository to your local machine.
+3. In the terminal, navigate to the repository's directory.
+4. Install the required packages by running the following command in your terminal: `pip install -r requirements.txt`
    - **Note**: You might need to install [tkinter](https://docs.python.org/3/library/tkinter.html) separately based on your system. For example, in Ubuntu, you can run `sudo apt-get install python3-tk`.
-3. Clone this repository to your local machine.
-4. In the terminal, navigate to the repository's directory.
 5. Run the main Application file using Python, with the following options:
    
 Supply a PGN game as a command-line argument:
