@@ -1,5 +1,5 @@
 '''
-Author:        James Parkington and Nelson Farrell
+Author:        James Parkington
 Created Date:  3/26/2023
 Modified Date: 5/9/2023
 
