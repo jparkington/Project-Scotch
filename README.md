@@ -92,7 +92,7 @@ If no game is submitted, a demo will run.
 
 ## Authors and Acknowledgements
 
-This project was developed by [James Parkington](https://github.com/jparkington)
+This project was developed by [James Parkington](https://github.com/jparkington).
 
 It was shaped under the supervision of [Professor Lindsay Jamieson](https://roux.northeastern.edu/people/lindsay-jamieson/) during class *5001 - Intensive Foundations of Computer Science* at the **Roux Institute of Northeastern University**.
 
