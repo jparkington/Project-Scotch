@@ -1,7 +1,7 @@
 '''
 Author:        James Parkington
 Created Date:  3/26/2023
-Modified Date: 4/23/2023
+Modified Date: 7/8/2023
 
 File containing the implementation of the Position class for representing 
 chess positions in a chess game analysis tool.
@@ -26,7 +26,6 @@ class Position:
         apply_move():            Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
         from_chess_board():      Creates a Position object from a python-chess Board object.
         get_board():             Generates a 2D list representing the board state at a given ply.
-        get_bitboard_integers(): Returns a list or sum of the integer resolutions of each bitstring for a given position.
         convert_piece_symbol():  Converts a python-chess piece symbol to the corresponding Unicode symbol.
         __str__():               Returns a textual representation of the board state at a given ply for easy visualization.
 
@@ -55,51 +54,7 @@ class Position:
                                '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
                                '♛' : 0b0001000000000000000000000000000000000000000000000000000000000000,
                                '♚' : 0b0000100000000000000000000000000000000000000000000000000000000000}
-        
-         
-    def get_move_history(self):
-        return self.move_history
-    
-    def get_user_submitted(self):
-        return self.user_submitted
-    
-    def get_white_turn(self):
-        return self.white_turn
-    
-    def get_move_number(self):
-        return self.move_number
-    
-    def get_move_notation(self):
-        return self.move_notation
-    
-    def get_final_move(self):
-        return self.final_move
-    
-    def get_bitboards(self):
-        return self.bitboards
-    
-    def set_move_history(self, move_history):
-        self.move_history = move_history
-        
-    def set_user_submitted(self, user_submitted):
-        self.move_history = user_submitted
-
-    def set_white_turn(self, white_turn):
-        self.white_turn = white_turn
-
-    def set_move_number(self, move_number):
-        self.move_number = move_number
-    
-    def set_move_notation(self, move_notation):
-        self.move_notation = move_notation
-
-    def set_final_move(self, final_move):
-        self.final_move = final_move
-
-    def set_bitboards(self, bitboards):
-        self.bitboards = bitboards
-    
-
+            
     @staticmethod
     def from_chess_board(board: chess.Board) -> 'Position':
         '''
@@ -115,19 +70,19 @@ class Position:
         '''
         
         position = Position()
-        position.set_bitboards({piece: 0 for piece in position.get_bitboards().keys()})
-        position.set_white_turn(board.turn)
+        position.bitboards = {piece: 0 for piece in position.bitboards.keys()}
+        position.white_turn = board.turn
 
         for square in chess.SQUARES:
             piece = board.piece_at(square)
 
             if piece:
                 piece_symbol = position.convert_piece_symbol(piece.symbol())
-                position.get_bitboards()[piece_symbol] |= 1 << square
+                position.bitboards[piece_symbol] |= 1 << square
 
         return position
-    
 
+    
     def apply_move(self, move: Tuple[str, int, int]):
         '''
         move (Tuple):
@@ -142,11 +97,10 @@ class Position:
         '''
 
         piece, origin, destination = move
-        bitboards            = self.get_bitboards()
         origin_bitboard      = 1 << origin
         destination_bitboard = 1 << destination
 
-        bitboards[piece] ^= origin_bitboard | destination_bitboard
+        self.bitboards[piece] ^= origin_bitboard | destination_bitboard
 
         # If the loop detects that a capture has occurred, break the loop, since the move must therefore be complete
         for opponent_piece in self.bitboards.keys():
@@ -155,9 +109,8 @@ class Position:
                    self.bitboards[opponent_piece] &= ~destination_bitboard
                    break
 
-        self.set_move_history(self.get_move_history() + [move])
-        self.set_white_turn(not self.get_white_turn())
-        self.set_bitboards(bitboards)
+        self.move_history.append(move)
+        self.white_turn = not self.white_turn
 
 
     def convert_piece_symbol(self, symbol: str) -> str:
@@ -171,7 +124,7 @@ class Position:
             return {'p': '♟︎', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'}[symbol]
         else:
             return {'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'}[symbol]
-          
+         
     def get_board(self) -> List[List[str]]:
         '''
         Generates a 2D list representing the board state at a given ply.
@@ -182,27 +135,28 @@ class Position:
 
         board = [[' ' for _ in range(8)] for _ in range(8)]
 
-        for piece, bitboard in self.get_bitboards().items():
+        for piece, bitboard in self.bitboards.items():
             for square in (i for i in range(64) if (bitboard >> i) & 1):
                 row, col = 7 - (square // 8), square % 8
                 board[row][col] = piece
 
         return board
     
-        
-    def get_bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
+    
+    @property
+    def bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
         '''
         Returns either a list of the integer resolutions of each bitstring for a given position or 
         the sum of all bitboards in the list as a single uint64 integer, based on the board_sum argument.
         '''
 
-        bitboard_integers = [np.uint64(bitboard) for bitboard in self.get_bitboards().values()]
+        bitboard_integers = [np.uint64(bitboard) for bitboard in self.bitboards.values()]
 
         if board_sum:
             return sum(bitboard_integers, np.uint64(0))
 
         return bitboard_integers
- 
+
 
     def __str__(self) -> str:
         '''
