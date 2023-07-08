@@ -47,7 +47,7 @@ class Matcher:
 
         self.storage       = storage
         self.parser        = parser
-        self.bitboard_sums = [position.bitboards_integers for position in parser.get_positions()]
+        self.bitboard_sums = [position.bitboard_integers for position in parser.get_positions()]
         self.partitions    = storage.get_partition_metadata()
         self.match         = (None, None, 0)
 

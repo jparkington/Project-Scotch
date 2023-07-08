@@ -64,23 +64,14 @@ class Utility:
     
     def get_pgn_path(self):
         return self.pgn_path
-
+    
     def get_pq_path(self):
         return self.pq_path
     
     def get_partition_col(self):
         return self.partition_col
+
     
-    def set_pgn_path(self, pgn_path):
-        self.pgn_path = pgn_path
-
-    def set_pq_path(self, pq_path):
-        self.pq_path = pq_path
-
-    def set_partition_col(self, partition_col):
-        self.partition_col = partition_col
-
-
     def get_partition_metadata(self):
         '''
         Retrieves the id and length of each partition in the Parquet file storage.
@@ -90,11 +81,11 @@ class Utility:
         stored in a dictionary, with partition_ids as keys and total_rows as values.
         '''
 
-        partitions = [d for d in os.listdir(self.get_pq_path()) if d.startswith(f'{self.get_partition_col()}=')]
+        partitions = [d for d in os.listdir(self.pq_path) if d.startswith(f'{self.partition_col}=')]
         metadata   = {}
 
         for partition_id in sorted([int(p.split('=')[1]) for p in partitions], reverse = True):
-            partition_path = os.path.join(self.get_pq_path(), f'{self.get_partition_col()}={partition_id}')
+            partition_path = os.path.join(self.pq_path, f'{self.partition_col}={partition_id}')
             parquet_files = [f for f in os.listdir(partition_path) if f.endswith('.parquet')]
             total_rows = 0
 
@@ -116,7 +107,8 @@ class Utility:
 
         Arguments:
             use_parent : If True, include the parent directory in the path.
-            subdirs    :    Subdirectories to include in the path.'''
+            subdirs    : Subdirectories to include in the path.
+        '''
 
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) \
                    if use_parent else os.path.dirname(os.path.abspath(__file__))
@@ -128,7 +120,6 @@ class Utility:
         '''
         Opens a file dialog and returns the selected file path as a string. The file type defaults to "PGN".
         '''
-
 
         file_path = filedialog.askopenfilename(title     = f"Select a {file_type} file",
                                                filetypes = [(f"{file_type} files", f"*.{file_type.lower()}")])
@@ -162,11 +153,11 @@ class Utility:
                 df = df.repartition(npartitions = max(int(df.memory_usage(deep = True).sum().compute() / target_size), 1))
 
                 if write:
-                    file_exists = os.path.exists(self.get_pq_path())
+                    file_exists = os.path.exists(self.pq_path)
                     if not file_exists and append: append = False
 
-                    df.to_parquet(self.get_pq_path(),
-                                  partition_on        = [self.get_partition_col()],
+                    df.to_parquet(self.pq_path,
+                                  partition_on        = [self.partition_col],
                                   write_metadata_file = True,
                                   engine              = "pyarrow",
                                   compression         = "snappy",
@@ -214,7 +205,7 @@ class Utility:
         file using the to_parquet method.
         '''
 
-        path = self.get_pgn_path()
+        path = self.pgn_path
         with open(path, 'r') as file:
 
             dataframes = []
@@ -265,7 +256,7 @@ class Utility:
         Reads a Parquet directory and returns it as a Dask DataFrame, with optional columm and partition selection
         '''
 
-        pq_path = self.get_pq_path()
+        pq_path = self.pq_path
         if not os.path.exists(pq_path): 
             print(f"File '{pq_path}' not found. Please select a Parquet file.")
             pq_path = self.open_file("parquet")
@@ -273,7 +264,7 @@ class Utility:
         if partitions:
             if not isinstance(partitions, (list, set, tuple)):
                 partitions = [partitions]
-            filters = [(self.get_partition_col(), 'in', partitions)]
+            filters = [(self.partition_col, 'in', partitions)]
         else:
             filters = None
 
@@ -287,4 +278,4 @@ class Utility:
         Allows a Utility() object to more concisely return a pgn_path.
         '''
 
-        return self.get_pgn_path()
+        return self.pgn_path
