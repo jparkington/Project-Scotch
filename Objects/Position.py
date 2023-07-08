@@ -8,7 +8,6 @@ chess positions in a chess game analysis tool.
 '''
 
 from   typing    import *
-from   functools import lru_cache
 import numpy     as np
 import chess
 
@@ -161,7 +160,6 @@ class Position:
         self.set_bitboards(bitboards)
 
 
-    @lru_cache(maxsize = 12)
     def convert_piece_symbol(self, symbol: str) -> str:
         '''
         Converts a python-chess piece symbol to the corresponding Unicode symbol.
@@ -173,8 +171,7 @@ class Position:
             return {'p': '♟︎', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'}[symbol]
         else:
             return {'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'}[symbol]
-        
-    @lru_cache(maxsize = 100)    
+          
     def get_board(self) -> List[List[str]]:
         '''
         Generates a 2D list representing the board state at a given ply.
