@@ -24,20 +24,20 @@ class Utility:
     saving and reading data from Parquet files, and constructing file paths. Requires creating an instance of the class to use its methods.
 
     Attributes:
-        pgn_path      (str): The path to the PGN file.
-        pq_dir        (str): The directory to save the Parquet file.
-        pq_name       (str): The name of the Parquet file.
-        partition_col (str): The name of the column used for partitioning the Parquet file. Defaults to 'total_ply'.
+        pgn_path      (str) : The path to the PGN file.
+        pq_dir        (str) : The directory to save the Parquet file.
+        pq_name       (str) : The name of the Parquet file.
+        partition_col (str) : The name of the column used for partitioning the Parquet file. Defaults to 'total_ply'.
     
     Methods:
-        get_partition_metadata: Retrieves the id and length of each partition in the Parquet file storage.
-        save_path:              Constructs a file path based on the provided subdirectories and an optional parent directory.
-        open_pgn:               Opens a dialog box to let users choose a .pgn file.
-        load_pgn_file:          Load a PGN file either from a command-line argument or through a file dialog.
-        to_parquet:             Save a pandas DataFrame as a Parquet file with a given file name and directory.
-        create_dataframe:       Creates a pandas DataFrame from a list of positions and a PGN object.
-        archive_multipgn:       Processes a PGN file with multiple games and appends each game to the parquet storage file.
-        from_parquet:           Read a Parquet file and return it as a pandas DataFrame.
+        get_partition_metadata : Retrieves the id and length of each partition in the Parquet file storage.
+        save_path              : Constructs a file path based on the provided subdirectories and an optional parent directory.
+        open_pgn               : Opens a dialog box to let users choose a .pgn file.
+        load_pgn_file          : Load a PGN file either from a command-line argument or through a file dialog.
+        to_parquet             : Save a pandas DataFrame as a Parquet file with a given file name and directory.
+        create_dataframe       : Creates a pandas DataFrame from a list of positions and a PGN object.
+        archive_multipgn       : Processes a PGN file with multiple games and appends each game to the parquet storage file.
+        from_parquet           : Read a Parquet file and return it as a pandas DataFrame.
     '''
 
     def __init__(self, 
@@ -88,10 +88,6 @@ class Utility:
         This method iterates through the Parquet file storage and collects metadata for each partition, 
         including the partition_id and the total number of rows in that partition. The metadata is 
         stored in a dictionary, with partition_ids as keys and total_rows as values.
-
-        Returns:
-            dict: A dictionary containing metadata for each partition in the Parquet file storage.
-                  Keys are partition_ids and values are the total number of rows in the partition.
         '''
 
         partitions = [d for d in os.listdir(self.get_pq_path()) if d.startswith(f'{self.get_partition_col()}=')]
@@ -113,18 +109,14 @@ class Utility:
 
     def save_path(self,
                   use_parent: bool, 
-                  *subdirs:   str) \
-                  -> str:
+                  *subdirs:   str) -> str:
         '''
         Construct a file path based on the provided subdirectories.
         Optionally, include the parent directory in the path.
 
-        Args:
-            use_parent: If True, include the parent directory in the path.
-            subdirs:    Subdirectories to include in the path.
-
-        Returns:
-            str: The constructed file path.'''
+        Arguments:
+            use_parent : If True, include the parent directory in the path.
+            subdirs    :    Subdirectories to include in the path.'''
 
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__))) \
                    if use_parent else os.path.dirname(os.path.abspath(__file__))
@@ -134,10 +126,7 @@ class Utility:
     
     def open_file(self, file_type: str = "PGN"):
         '''
-        Opens a file dialog and returns the selected file path as a string.
-
-        Args:
-            file_type: The file type to open. Defaults to "PGN".
+        Opens a file dialog and returns the selected file path as a string. The file type defaults to "PGN".
         '''
 
 
@@ -158,13 +147,13 @@ class Utility:
         '''
         Save a Dask DataFrame as a Parquet file with a given file name and directory.
 
-        Args:
-            input:       The Parser object to convert to a DataFrame, or an existing DataFrame, to save as a Parquet file.
-            is_parser:   A flag indicating if the input_df is a Parser object. Defaults to True.
-            append:      If True, appends the DataFrame to an existing Parquet file, if it exists. Defaults to True.
-            write:       If True, proceeds to write the resulting DataFrame to the object's pq_path.
-            partitions:  A list of column names to partition the data by.
-            target_size: The desired partition size for the output Parquet file in bytes. Defaults to 64 * 1024 * 1024.
+        Arguments:
+            input       : The Parser object to convert to a DataFrame, or an existing DataFrame, to save as a Parquet file.
+            is_parser   : A flag indicating if the input_df is a Parser object. Defaults to True.
+            append      : If True, appends the DataFrame to an existing Parquet file, if it exists. Defaults to True.
+            write       : If True, proceeds to write the resulting DataFrame to the object's pq_path.
+            partitions  : A list of column names to partition the data by.
+            target_size : The desired partition size for the output Parquet file in bytes. Defaults to 64 * 1024 * 1024.
         '''
 
         try:
@@ -197,9 +186,6 @@ class Utility:
         This function iterates through the given Parser object's positions and extracts relevant information, 
         such as the game hash, PGN string, move number, and bitboard integers. The resulting DataFrame can be 
         used for storage, analysis, or matching.
-
-        Args:
-            parser (Parser): The Parser object containing the PGN file and related methods.
         '''
     
         positions   = parser.get_positions()
@@ -274,8 +260,7 @@ class Utility:
     
     def from_parquet(self, 
                      columns    = None,
-                     partitions = None) \
-                     -> dd.DataFrame:
+                     partitions = None) -> dd.DataFrame:
         '''
         Reads a Parquet directory and returns it as a Dask DataFrame, with optional columm and partition selection
         '''

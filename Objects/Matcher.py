@@ -38,7 +38,9 @@ class Matcher:
     '''
 
 
-    def __init__(self, storage: Utility, parser:  Parser):
+    def __init__(self, 
+                 storage: Utility, 
+                 parser:  Parser):
         '''
         Instantiates a Matcher object for comparing a Parser game against a database of games for analysis.
         '''
