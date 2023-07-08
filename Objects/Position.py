@@ -54,6 +54,20 @@ class Position:
                                '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
                                '♛' : 0b0001000000000000000000000000000000000000000000000000000000000000,
                                '♚' : 0b0000100000000000000000000000000000000000000000000000000000000000}
+        
+    @property
+    def bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
+        '''
+        Returns either a list of the integer resolutions of each bitstring for a given position or 
+        the sum of all bitboards in the list as a single uint64 integer, based on the board_sum argument.
+        '''
+
+        bitboard_integers = [np.uint64(bitboard) for bitboard in self.bitboards.values()]
+
+        if board_sum:
+            return sum(bitboard_integers, np.uint64(0))
+
+        return bitboard_integers
             
     @staticmethod
     def from_chess_board(board: chess.Board) -> 'Position':
@@ -141,22 +155,6 @@ class Position:
                 board[row][col] = piece
 
         return board
-    
-    
-    @property
-    def bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
-        '''
-        Returns either a list of the integer resolutions of each bitstring for a given position or 
-        the sum of all bitboards in the list as a single uint64 integer, based on the board_sum argument.
-        '''
-
-        bitboard_integers = [np.uint64(bitboard) for bitboard in self.bitboards.values()]
-
-        if board_sum:
-            return sum(bitboard_integers, np.uint64(0))
-
-        return bitboard_integers
-
 
     def __str__(self) -> str:
         '''

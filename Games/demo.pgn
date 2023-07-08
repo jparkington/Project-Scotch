@@ -1,14 +1,8 @@
-[Event "?"]
-[Site "?"]
 [Date "2022.08.21"]
-[EventDate "?"]
 [Round "1"]
 [Result "1-0"]
 [White "James Parkington"]
 [Black "Greg Townsend"]
-[ECO "?"]
-[WhiteElo "?"]
-[BlackElo "?"]
 [PlyCount "57"]
 
 1.d4 Nf6 2.c4 e6 3.Nf3 d5 4.Nc3 Bb4 5.cxd5 exd5 6.Bg5 h6 7.Bh4
