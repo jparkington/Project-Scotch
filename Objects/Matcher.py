@@ -61,6 +61,18 @@ class Matcher:
     def find_best_lcs(self) -> Tuple[Optional[str], Optional[List[Tuple[int, int]]], int]:
         '''
         Finds the best LCS across all partitions.
+
+        This method uses ThreadPoolExecutor to process multiple partitions concurrently, which improves performance
+        by taking advantage of multiple CPU cores. It submits futures for each partition and processes them in the order
+        they complete using the as_completed function. It cancels any remaining futures with a partition_id less than the
+        best match found so far, further improving performance by avoiding unnecessary computations.
+
+        A progress bar is displayed using the alive-progress package, showing the progress of the task and the longest 
+        sequence of ply found so far.
+
+        The time complexity of this algorithm depends on the number of partitions, the number of CPU cores, and the time
+        required to process each partition. In the worst case, the time complexity is O(n), where n is the number of partitions.
+        However, due to concurrency and early stopping, the actual execution time is typically much lower.
         '''
 
         print()
