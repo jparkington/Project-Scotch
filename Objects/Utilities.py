@@ -179,19 +179,18 @@ class Utility:
         used for storage, analysis, or matching.
         '''
     
-        positions   = parser.get_positions()
-        game_id     = parser.generate_id(positions)
+        game_id     = parser.generate_id(parser.positions)
         pgn_string  = str(parser.get_game())
-        total_ply   = len(positions)
+        total_ply   = len(parser.positions)
 
         delayed_data = [dk.delayed(pd.DataFrame({"game_id"   : game_id,
                                                  "pgn"       : pgn_string,
                                                  "total_ply" : total_ply,
                                                  "ply"       : ply,
-                                                 "board_sum" : i.get_bitboard_integers()}, 
+                                                 "board_sum" : i.bitboard_integers}, 
                                                  index       = [game_id * 100000 + ply]))
 
-                        for ply, i in enumerate(positions)]
+                        for ply, i in enumerate(parser.positions)]
 
         return dd.from_delayed(delayed_data)
 

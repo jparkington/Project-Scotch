@@ -47,7 +47,7 @@ class Matcher:
 
         self.storage       = storage
         self.parser        = parser
-        self.bitboard_sums = [position.bitboard_integers for position in parser.get_positions()]
+        self.bitboard_sums = [position.bitboard_integers for position in parser.positions]
         self.partitions    = storage.get_partition_metadata()
         self.match         = (None, None, 0)
 
@@ -108,8 +108,8 @@ class Matcher:
         match_info   = self.match
         if not match_info[0]: return "No matching games found."
 
-        positions   = match_info[0].get_positions()
-        metadata    = match_info[0].get_metadata()
+        positions   = match_info[0].positions
+        metadata    = match_info[0].metadata
         start_match = positions[match_info[1][1][0]]
         end_match   = positions[match_info[1][1][1]]
         start_move  = start_match.move_number

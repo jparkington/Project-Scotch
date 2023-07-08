@@ -38,6 +38,8 @@ class Parser:
         self.pgn_input = pgn_input
         self.is_file   = is_file
         self.game      = self.read_game()
+        self.positions = self.get_positions()
+        self.metadata  = self.get_metadata()
 
     def read_game(self) -> pgn.Game:
         '''

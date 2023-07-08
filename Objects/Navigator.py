@@ -67,8 +67,8 @@ class Navigator:
         self.move   = tk.Label(self.root, font = ("Menlo", 12, "bold"))
         self.turn   = tk.Label(self.root, font = ("Menlo", 12))
         self.canvas = tk.Canvas(self.root,
-                                width  = self.get_square_size() * 8, 
-                                height = self.get_square_size() * 8)
+                                width  = self.square_size * 8, 
+                                height = self.square_size * 8)
 
         self.l_arrow = tk.Button(self.root, text = "←", font = ("Menlo", 30), command = self.set_prev_position)
         self.r_arrow = tk.Button(self.root, text = "→", font = ("Menlo", 30), command = self.set_next_position)
@@ -80,44 +80,28 @@ class Navigator:
         self.div     = tk.Button(self.frame, text = "↛", font = ("Menlo", 30), command = self.set_divergence_position)
         self.toggle  = tk.Button(self.frame, text = "↪", font = ("Menlo", 30), command = self.toggle_game)
 
-    def get_index(self):
-        return self.index
-    
-    def get_square_size(self):
-        return self.square_size
-    
-    def get_is_parser1(self):
-        return self.is_parser1
-    
-    def get_active_parser(self):
-        return self.parser1 if self.get_is_parser1() else self.parser2
-    
-    def get_end_index(self):
-        return len(self.get_active_parser().get_positions()) - 1
+    @property
+    def active_parser(self):
+        return self.parser1 if self.is_parser1 else self.parser2
 
-    def set_index(self, index):
-        self.index = index
-
-    def set_square_size(self, square_size):
-        self.square_size = square_size
-
-    def set_is_parser1(self, is_parser1):
-        self.is_parser1 = is_parser1
+    @property
+    def end_index(self):
+        return len(self.active_parser.positions) - 1
 
     def set_next_position(self, event = None):
-        self.set_index(min(self.get_index() + 1, self.get_end_index()))
+        self.index = min(self.index + 1, self.end_index)
         self.display_position()
 
     def set_prev_position(self, event = None):
-        self.set_index(max(self.get_index() - 1, 0))
+        self.index = max(self.index - 1, 0)
         self.display_position()
 
     def set_first_position(self, event = None):
-        self.set_index(0)
+        self.index = 0
         self.display_position()
 
     def set_end_position(self, event = None):
-        self.set_index(self.get_end_index())
+        self.index = self.end_index
         self.display_position()
 
     def set_convergence_position(self, event = None):
@@ -129,7 +113,7 @@ class Navigator:
         self.display_position()
 
     def toggle_parser(self):
-        self.set_is_parser1(not self.get_is_parser1())
+        self.is_parser1 = not self.is_parser1
 
     def toggle_game(self):
         '''
@@ -139,7 +123,7 @@ class Navigator:
         '''
 
         self.toggle_parser()
-        if self.get_index() > self.get_end_index(): self.set_index(self.get_end_index())
+        if self.index > self.end_index: self.index = self.end_index
         self.display_position()
 
     def update_button_states(self):
@@ -150,14 +134,14 @@ class Navigator:
         If at the last position, disable e_arrow and r_arrow buttons.
         """
 
-        if self.get_index() == 0:
+        if self.index == 0:
             self.f_arrow.config(state = "disabled")
             self.l_arrow.config(state = "disabled")
         else:
             self.f_arrow.config(state = "normal")
             self.l_arrow.config(state = "normal")
 
-        if self.get_index() == self.get_end_index():
+        if self.index == self.end_index:
             self.e_arrow.config(state = "disabled")
             self.r_arrow.config(state = "disabled")
         else:
@@ -171,7 +155,6 @@ class Navigator:
             self.con.config(state = "normal" if self.index != con_index else "disabled")
             self.div.config(state = "normal" if self.index != div_index else "disabled")
             self.toggle.config(state = "normal")
-            # self.toggle.config(bg = "yellow") if con_index <= self.index <= div_index else self.toggle.config(bg = self.root.cget("bg"))
         else:
             self.con.config(state = "disabled")
             self.div.config(state = "disabled")
@@ -187,17 +170,16 @@ class Navigator:
         '''
 
         board       = position.get_board()
-        square_size = self.get_square_size()
         squares     = [square for row in board for square in row]
-        colors      = ["#E0E0E0", "#B0B0B0" if self.get_is_parser1() else "#A3B9CC"] * 4
+        colors      = ["#E0E0E0", "#B0B0B0" if self.is_parser1 else "#A3B9CC"] * 4
 
         for i, (color, square) in enumerate(zip(cycle(colors + colors[::-1]), squares)):
             j = i % 8
-            x = j * square_size
-            y = (i // 8) * square_size
-            self.canvas.create_rectangle(x, y, x + square_size, y + square_size, fill = color)
-            self.canvas.create_text(x + square_size / 2, y + square_size / 2 - square_size / 20, text = square, 
-                                     font = ("Arial Unicode MS", int(square_size * 0.8)), fill = 'black')
+            x = j * self.square_size
+            y = (i // 8) * self.square_size
+            self.canvas.create_rectangle(x, y, x + self.square_size, y + self.square_size, fill = color)
+            self.canvas.create_text(x + self.square_size / 2, y + self.square_size / 2 - self.square_size / 20, text = square, 
+                                     font = ("Arial Unicode MS", int(self.square_size * 0.8)), fill = 'black')
 
     def display_position(self):
         '''
@@ -208,14 +190,14 @@ class Navigator:
         packed and visible in the tkinter window.
         '''
 
-        parser   = self.get_active_parser()
-        position = parser.get_positions()[self.get_index()]
-        metadata = parser.get_metadata()
+        parser   = self.active_parser
+        position = parser.positions[self.index]
+        metadata = parser.metadata
 
         self.canvas.delete("all")
         self.draw_canvas(position)
 
-        self.match.config(text = f"Game Uploaded on {self.ts}" if self.get_is_parser1() else "Matched Game", pady = 10)
+        self.match.config(text = f"Game Uploaded on {self.ts}" if self.is_parser1 else "Matched Game", pady = 10)
         self.event.config(text = f"{metadata.get('White', '')} vs. {metadata.get('Black', '')} ({metadata.get('Date', '').split('.')[0]})", pady = 0)
         self.move.config(text  = f"{position.move_number}. {position.move_notation}", pady = 10)
         self.turn.config(text  = metadata.get('Result', '') if position.final_move else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
