@@ -13,25 +13,25 @@ import chess
 
 class Position:
     '''
-    Attributes:
-        move_history   (list): A list or stack storing the sequence of moves made in the game.
-        user_submitted (bool): A boolean indicating whether or not the file came from the user or the program's game storage
-        white_turn     (bool): A boolean indicating whether or not it is white's turn to move.
-        move_number    (int):  The move number for the current position.
-        move_notation  (str):  The move notation in Standard Algebraic Notation (SAN) for the current position.
-        final_move     (bool): A boolean indicating whether or not this position was the last one in the PGN file.
-        bitboards      (dict): A dictionary containing the bitboards for each piece type and color.
-
-    Methods:
-        apply_move():            Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
-        from_chess_board():      Creates a Position object from a python-chess Board object.
-        get_board():             Generates a 2D list representing the board state at a given ply.
-        convert_piece_symbol():  Converts a python-chess piece symbol to the corresponding Unicode symbol.
-        __str__():               Returns a textual representation of the board state at a given ply for easy visualization.
-
     Bitboards are an efficient way to represent chess positions using 64-bit integers, with each bit corresponding to a square on the chessboard. 
     They offer several advantages, including memory efficiency, fast bitwise operations on modern CPUs, simplified move generation, and ease of implementation. 
     By using bitboards, our analysis with Matcher will have a relatively small memory footprint and more maintainable code.
+
+    Attributes:
+        move_history   (list) : A list or stack storing the sequence of moves made in the game.
+        user_submitted (bool) : A boolean indicating whether or not the file came from the user or the program's game storage
+        white_turn     (bool) : A boolean indicating whether or not it is white's turn to move.
+        move_number    (int)  : The move number for the current position.
+        move_notation  (str)  : The move notation in Standard Algebraic Notation (SAN) for the current position.
+        final_move     (bool) : A boolean indicating whether or not this position was the last one in the PGN file.
+        bitboards      (dict) : A dictionary containing the bitboards for each piece type and color.
+
+    Methods:
+        apply_move           : Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
+        from_chess_board     : Creates a Position object from a python-chess Board object.
+        get_board            : Generates a 2D list representing the board state at a given ply.
+        convert_piece_symbol : Converts a python-chess piece symbol to the corresponding Unicode symbol.
+        __str__              : Returns a textual representation of the board state at a given ply for easy visualization.
     '''
 
     def __init__(self):
@@ -75,12 +75,6 @@ class Position:
         Creates a Position object from a python-chess Board object.
 
         Using a static method allows this conversion to happen without creating an instance of the Position class first.
-
-        Args:
-            board: A python-chess Board object representing the current position of the chess game.
-
-        Returns:
-            position: A Position object with the equivalent bitboard representation of the given chess.Board object.
         '''
         
         position = Position()
@@ -100,9 +94,9 @@ class Position:
     def apply_move(self, move: Tuple[str, int, int]):
         '''
         move (Tuple):
-            piece:       a Unicode character representing the moving piece
-            origin:      an integer representing the origin square index (0-63)
-            destination: an integer representing the destination square index (0-63)
+            piece       : a Unicode character representing the moving piece
+            origin      : an integer representing the origin square index (0-63)
+            destination : an integer representing the destination square index (0-63)
 
         The method performs the following steps:
             1. Create bitboards with a single bit set at the origin and destination squares.
@@ -130,9 +124,6 @@ class Position:
     def convert_piece_symbol(self, symbol: str) -> str:
         '''
         Converts a python-chess piece symbol to the corresponding Unicode symbol.
-
-        Args:
-            symbol: A single ASCII character representing a chess piece in python-chess.
         '''
         if symbol.islower():
             return {'p': '♟︎', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'}[symbol]
@@ -142,9 +133,6 @@ class Position:
     def get_board(self) -> List[List[str]]:
         '''
         Generates a 2D list representing the board state at a given ply.
-
-        Returns:
-            List[List[str]]: A 2D list representing the board state with piece symbols.
         '''
 
         board = [[' ' for _ in range(8)] for _ in range(8)]

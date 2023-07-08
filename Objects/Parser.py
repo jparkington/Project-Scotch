@@ -16,19 +16,19 @@ import os
 
 class Parser:
     '''
-    Attributes:
-        pgn_input (str):            The file path of the PGN file to be parsed or an existing PGN string.
-        is_file   (bool):           Whether or not the pgn_input provided is a path to a file or an existing PGN string.
-        game      (chess.pgn.Game): The parsed PGN game object.
-
-    Methods:
-        read_game:     Reads the PGN file or PGN string using the python-chess library and returns the game object.
-        get_metadata:  Returns a dictionary containing the metadata of the PGN file.
-        get_positions: Parses the PGN file and returns a list of Position objects for each position in the game.
-        generate_id:   Calculates the bitboard sum of all positions.
-
     This class leverages the python-chess library to parse and validate PGN files, allowing the focus to be on
     storing positions as bitboards for Matcher.
+
+    Attributes:
+        pgn_input (str)            : The file path of the PGN file to be parsed or an existing PGN string.
+        is_file   (bool)           : Whether or not the pgn_input provided is a path to a file or an existing PGN string.
+        game      (chess.pgn.Game) : The parsed PGN game object.
+
+    Methods:
+        read_game     : Reads the PGN file or PGN string using the python-chess library and returns the game object.
+        get_metadata  : Returns a dictionary containing the metadata of the PGN file.
+        get_positions : Parses the PGN file and returns a list of Position objects for each position in the game.
+        generate_id   : Calculates the bitboard sum of all positions.
     '''
 
     def __init__(self, 
