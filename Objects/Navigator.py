@@ -120,11 +120,11 @@ class Navigator:
         self.set_index(self.get_end_index())
         self.display_position()
 
-    def set_convergence_position(self, event=None):
+    def set_convergence_position(self, event = None):
         self.index = self.indices[0][0] if self.is_parser1 else self.indices[1][0]
         self.display_position()
 
-    def set_divergence_position(self, event=None):
+    def set_divergence_position(self, event = None):
         self.index = self.indices[0][1] if self.is_parser1 else self.indices[1][1]
         self.display_position()
 
@@ -217,8 +217,8 @@ class Navigator:
 
         self.match.config(text = f"Game Uploaded on {self.ts}" if self.get_is_parser1() else "Matched Game", pady = 10)
         self.event.config(text = f"{metadata.get('White', '')} vs. {metadata.get('Black', '')} ({metadata.get('Date', '').split('.')[0]})", pady = 0)
-        self.move.config(text  = f"{position.get_move_number()}. {position.get_move_notation()}", pady = 10)
-        self.turn.config(text  = metadata.get('Result', '') if position.get_final_move() else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
+        self.move.config(text  = f"{position.move_number}. {position.move_notation}", pady = 10)
+        self.turn.config(text  = metadata.get('Result', '') if position.final_move else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
 
         self.match.pack()
         self.event.pack()
