@@ -48,6 +48,7 @@ class Matcher:
         self.parser        = parser
         self.bitboard_sums = [position.bitboard_integers for position in parser.positions]
         self.partitions    = storage.get_metadata()
+        self.total_records = sum(self.partitions.values())
         self.match         = (None, None, 0, 0)
 
     def process_partition(self, part_id: int) -> Tuple[int, List[int]]:
@@ -80,35 +81,34 @@ class Matcher:
         '''
 
         print()
-        with alive_bar(sum(self.partitions.values()), bar = 'smooth', dual_line = True) as bar:
+        with alive_bar(self.total_records, bar = 'smooth', dual_line = True) as bar:
+            remaining = self.total_records
             for total_ply, num_records in self.partitions.items():
                 
                 if self.match[2] > total_ply:
+                    bar(remaining)
                     break
 
                 bar.text(f'Reviewed all games ≥ {total_ply} ply. Longest sequence ({self.match[2]}): {"".join(["♟︎", "♙"] * (self.match[2] // 2) + ["♟︎"] * (self.match[2] % 2))}')
                 bar(num_records)
-
+                remaining -= num_records
+                
                 lcs_length, lcs_indices = self.process_partition(total_ply)
                 if lcs_length > self.match[2]:
                     self.match = (None, lcs_indices, lcs_length, total_ply)
 
         # Retrieve the best match from storage
-        match_row    = self.storage.from_parquet(partition = self.match[3], columns = ['ply', 'pgn'], rows = [self.match[1][0][0]])
+        match_row    = self.storage.from_parquet(partition = self.match[3], columns = ['ply', 'pgn'], rows = [self.match[1][1][0]])
         match_pgn    = match_row.iloc[0]['pgn']
         match_parser = Parser(match_pgn, False)
-        print(self.match)
-
-        # Convert the indices to be relative to the start of the game
         game_start   = match_row.iloc[0]['ply']
-        game_indices = [self.match[1][0], (game_start, game_start + self.match[2] - 1)]
+        game_indices = [self.match[1][0], (game_start, game_start + self.match[2] - 1)] # Relate indices to the start of the matched game
         
         self.match = (match_parser, game_indices, self.match[2], self.match[3])
 
     def __str__(self) -> str:
 
         match_info = self.match
-        print(match_info)
         if not match_info[0]: return "No matching games found."
 
         positions   = match_info[0].positions
