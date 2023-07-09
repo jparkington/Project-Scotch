@@ -76,7 +76,7 @@ class Parser:
 
         return {key: self.game.headers[key] for key in self.game.headers.keys() if self.game.headers[key] not in ["?", "0", "", " "]}
 
-    def get_positions(self, user_submitted = True) -> List['Position']:
+    def get_positions(self) -> List['Position']:
         '''
         Parses the PGN file and returns a list of Position objects representing each position in the game, and additionally 
         marks if those positions were submitted by the user (optional).
@@ -88,22 +88,17 @@ class Parser:
         '''
 
         board     = self.game.board()
-        positions = [Position.from_chess_board(board)]
+        positions = [Position()]
 
-        move_number = 1
-        for move in self.game.mainline_moves():
+        for i, move in enumerate(self.game.mainline_moves()):
             move_notation = board.san(move)
             board.push(move)
 
-            position               = Position.from_chess_board(board)
-            position.move_number   = move_number
-            position.move_notation = move_notation
-            if not user_submitted: position.user_submitted = False
-            positions.append(position)
-
-            # Increment move_number after every full move (i.e., a white move and a black move)
-            if not board.turn:
-                move_number += 1
+            move_number = (i // 2) + 1
+            positions.append(Position(move_number   = move_number, 
+                                      move_notation = move_notation, 
+                                      white_turn    = board.turn,
+                                      bitboards     = Position.get_bitboards(board)))
 
         positions[-1].final_move = True
         return positions

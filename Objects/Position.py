@@ -18,8 +18,6 @@ class Position:
     By using bitboards, our analysis with Matcher will have a relatively small memory footprint and more maintainable code.
 
     Attributes:
-        move_history   (list) : A list or stack storing the sequence of moves made in the game.
-        user_submitted (bool) : A boolean indicating whether or not the file came from the user or the program's game storage
         white_turn     (bool) : A boolean indicating whether or not it is white's turn to move.
         move_number    (int)  : The move number for the current position.
         move_notation  (str)  : The move notation in Standard Algebraic Notation (SAN) for the current position.
@@ -28,32 +26,34 @@ class Position:
 
     Methods:
         apply_move           : Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
-        from_chess_board     : Creates a Position object from a python-chess Board object.
+        generate_bitboards   : Converts a python-chess Board object into a set of bitboards.
         get_board            : Generates a 2D list representing the board state at a given ply.
-        convert_piece_symbol : Converts a python-chess piece symbol to the corresponding Unicode symbol.
         __str__              : Returns a textual representation of the board state at a given ply for easy visualization.
     '''
 
-    def __init__(self):
+    def __init__(self,
+                 move_number   : int  = 0, 
+                 move_notation : str  = "Game Start", 
+                 final_move    : bool = False,
+                 white_turn    : bool = True, 
+                 bitboards     : Optional[Dict[str, int]] = {'♙' : 0b0000000000000000000000000000000000000000000000001111111100000000,
+                                                             '♖' : 0b0000000000000000000000000000000000000000000000000000000010000001,
+                                                             '♘' : 0b0000000000000000000000000000000000000000000000000000000001000010,
+                                                             '♗' : 0b0000000000000000000000000000000000000000000000000000000000100100,
+                                                             '♕' : 0b0000000000000000000000000000000000000000000000000000000000001000,
+                                                             '♔' : 0b0000000000000000000000000000000000000000000000000000000000010000,
+                                                             '♟︎' : 0b0000000011111111000000000000000000000000000000000000000000000000,
+                                                             '♜' : 0b1000000100000000000000000000000000000000000000000000000000000000,
+                                                             '♞' : 0b0100001000000000000000000000000000000000000000000000000000000000,
+                                                             '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
+                                                             '♛' : 0b0000100000000000000000000000000000000000000000000000000000000000,
+                                                             '♚' : 0b0001000000000000000000000000000000000000000000000000000000000000}):
 
-        self.move_history   = []
-        self.user_submitted = True
-        self.white_turn     = True
-        self.move_number    = 0
-        self.move_notation  = "Game Start"
-        self.final_move     = False
-        self.bitboards      = {'♙' : 0b0000000000000000000000000000000000000000000000001111111100000000,
-                               '♖' : 0b0000000000000000000000000000000000000000000000000000000010000001,
-                               '♘' : 0b0000000000000000000000000000000000000000000000000000000001000010,
-                               '♗' : 0b0000000000000000000000000000000000000000000000000000000000100100,
-                               '♕' : 0b0000000000000000000000000000000000000000000000000000000000010000,
-                               '♔' : 0b0000000000000000000000000000000000000000000000000000000000001000,
-                               '♟︎' : 0b0000000011111111000000000000000000000000000000000000000000000000,
-                               '♜' : 0b1000000100000000000000000000000000000000000000000000000000000000,
-                               '♞' : 0b0100001000000000000000000000000000000000000000000000000000000000,
-                               '♝' : 0b0010010000000000000000000000000000000000000000000000000000000000,
-                               '♛' : 0b0001000000000000000000000000000000000000000000000000000000000000,
-                               '♚' : 0b0000100000000000000000000000000000000000000000000000000000000000}
+        self.move_number   = move_number
+        self.move_notation = move_notation
+        self.final_move    = final_move
+        self.white_turn    = white_turn
+        self.bitboards     = bitboards
         
     @property
     def bitboard_integers(self, board_sum: bool = True) -> Union[List[np.uint64], np.uint64]:
@@ -70,27 +70,28 @@ class Position:
         return bitboard_integers
             
     @staticmethod
-    def from_chess_board(board: chess.Board) -> 'Position':
+    def get_bitboards(board: chess.Board) -> Dict[str, int]:
         '''
-        Creates a Position object from a python-chess Board object.
+        Converts a python-chess Board object into a set of bitboards.
 
-        Using a static method allows this conversion to happen without creating an instance of the Position class first.
+        This method iterates over each square on the given chess board. If a piece is present on a square,
+        it updates the corresponding bit in the appropriate bitboard.
+
+        Using a static method allows this conversion to happen independently of any particular instance of the Position class.
         '''
         
-        position = Position()
-        position.bitboards = {piece: 0 for piece in position.bitboards.keys()}
-        position.white_turn = board.turn
+        bitboards         = {piece: 0 for piece in Position().bitboards.keys()}
+        symbol_to_unicode = {'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔',
+                             'p': '♟︎', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'}
 
         for square in chess.SQUARES:
             piece = board.piece_at(square)
-
             if piece:
-                piece_symbol = position.convert_piece_symbol(piece.symbol())
-                position.bitboards[piece_symbol] |= 1 << square
+                piece_symbol = symbol_to_unicode[piece.symbol()]
+                bitboards[piece_symbol] |= 1 << square
 
-        return position
+        return bitboards
 
-    
     def apply_move(self, move: Tuple[str, int, int]):
         '''
         move (Tuple):
@@ -117,26 +118,14 @@ class Position:
                    self.bitboards[opponent_piece] &= ~destination_bitboard
                    break
 
-        self.move_history.append(move)
         self.white_turn = not self.white_turn
-
-
-    def convert_piece_symbol(self, symbol: str) -> str:
-        '''
-        Converts a python-chess piece symbol to the corresponding Unicode symbol.
-        '''
-        if symbol.islower():
-            return {'p': '♟︎', 'r': '♜', 'n': '♞', 'b': '♝', 'q': '♛', 'k': '♚'}[symbol]
-        else:
-            return {'P': '♙', 'R': '♖', 'N': '♘', 'B': '♗', 'Q': '♕', 'K': '♔'}[symbol]
          
     def get_board(self) -> List[List[str]]:
         '''
         Generates a 2D list representing the board state at a given ply.
         '''
 
-        board = [[' ' for _ in range(8)] for _ in range(8)]
-
+        board = [[' '] * 8 for _ in range(8)]
         for piece, bitboard in self.bitboards.items():
             for square in (i for i in range(64) if (bitboard >> i) & 1):
                 row, col = 7 - (square // 8), square % 8
@@ -145,9 +134,6 @@ class Position:
         return board
 
     def __str__(self) -> str:
-        '''
-        Returns a textual representation of the board state at a given ply for easy visualization.
-        '''
 
         board = self.get_board()
 

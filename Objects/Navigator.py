@@ -219,6 +219,7 @@ class Navigator:
         self.update_button_states()
 
     def __call__(self):
+        
         self.root.title("Navigator")
         self.root.bind("<Right>", self.set_next_position)
         self.root.bind("<Left>",  self.set_prev_position)

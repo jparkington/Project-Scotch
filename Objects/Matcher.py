@@ -101,9 +101,6 @@ class Matcher:
                         self.match = (match_parser, metadata[1], metadata[0])
 
     def __str__(self) -> str:
-        '''
-        Returns a formatted string describing the best matching game and the longest matching sequence.
-        '''
 
         match_info   = self.match
         if not match_info[0]: return "No matching games found."
@@ -120,9 +117,6 @@ class Matcher:
                 f" and continues for {match_info[2]} ply to {end_match.move_notation} at move {end_move}.")
 
     def __call__(self, print_result: bool = True):
-        '''
-        Executes find_best_lcs and optionally prints the result.
-        '''
 
         self.find_best_lcs()
         if print_result: print(self)
