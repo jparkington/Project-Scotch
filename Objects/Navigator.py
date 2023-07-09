@@ -94,8 +94,8 @@ class Navigator:
         '''
         Switches between the Parser objects in the parsers list and ensures an invalid ply_index isn't used upon switching.
         
-        The `parser_index` is incremented and wrapped around the length of the parsers list to achieve this. If the current 
-        `ply_index` is beyond the `end_index` of the new active Parser, it is adjusted to that Parser's final ply.
+        The parser_index is incremented and wrapped around the length of the parsers list to achieve this. If the current 
+        ply_index is beyond the end_index of the new active Parser, it is adjusted to that Parser's final ply.
         '''
 
         self.parser_index = (self.parser_index + 1) % len(self.parsers)

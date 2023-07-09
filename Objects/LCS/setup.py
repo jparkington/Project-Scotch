@@ -15,9 +15,15 @@ To build and compile the lcs_cython module, run the following command in your te
 python setup.py build_ext --inplace
 '''
 
-from   setuptools   import setup
-from   Cython.Build import cythonize
+from setuptools import setup, Extension
+from Cython.Build import cythonize
 import numpy as np
 
-setup(ext_modules  = cythonize("lcs_cython.pyx", language_level = 3),
-      include_dirs = [np.get_include()])
+extensions = [
+    Extension("lcs_cython", ["lcs_cython.pyx"]),
+]
+
+setup(
+    ext_modules  = cythonize(extensions, language_level = 3),
+    include_dirs = [np.get_include()]
+)

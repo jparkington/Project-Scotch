@@ -1,7 +1,7 @@
 '''
 Author:        James Parkington
 Created Date:  5/7/2023
-Modified Date: 5/8/2023
+Modified Date: 7/9/2023
 
 This file provides an optimized implementation of the Longest Common Subsequence (LCS) algorithm using Cython.
 The purpose of this file is to improve the performance of the LCS calculation when working with large sequences.
@@ -42,20 +42,23 @@ cpdef object lcs_indices(np.ndarray[uint64_t, ndim = 1] short_seq,
     cdef int m, n
     m, n = long_seq.shape[0], short_seq.shape[0]
     cdef np.ndarray[uint64_t, ndim = 2] dp = np.zeros((n + 1, m + 1), dtype = np.uint64)
+    cdef np.ndarray[uint64_t, ndim = 2] ss = np.zeros((n + 1, m + 1), dtype = np.uint64)
+    cdef np.ndarray[uint64_t, ndim = 2] sl = np.zeros((n + 1, m + 1), dtype = np.uint64)
 
     for i in range(1, n + 1):
         for j in range(1, m + 1):
-            dp[i, j] = dp[i - 1, j - 1] + 1 if short_seq[i - 1] == long_seq[j - 1] else max(dp[i - 1, j], dp[i, j - 1])
+            if short_seq[i - 1] == long_seq[j - 1]:
+                dp[i, j] = dp[i - 1, j - 1] + 1
+                ss[i, j] = ss[i - 1, j - 1] if dp[i - 1, j - 1] > 0 else i - 1
+                sl[i, j] = sl[i - 1, j - 1] if dp[i - 1, j - 1] > 0 else j - 1
+            else:
+                if dp[i - 1, j] > dp[i, j - 1]:
+                    dp[i, j] = dp[i - 1, j]
+                    ss[i, j] = ss[i - 1, j]
+                    sl[i, j] = sl[i - 1, j]
+                else:
+                    dp[i, j] = dp[i, j - 1]
+                    ss[i, j] = ss[i, j - 1]
+                    sl[i, j] = sl[i, j - 1]
 
-    i, j = n, m
-    s, l = None, None
-    while i > 0 and j > 0:
-        if short_seq[i - 1] == long_seq[j - 1]:
-            if not s and not l: s, l = i - 1, j - 1
-            i, j = i - 1, j - 1
-        elif dp[i - 1, j] > dp[i, j - 1]:
-            i -= 1
-        else:
-            j -= 1
-
-    return dp[n, m], [(i, s), (j, l)]
+    return dp[n, m], [(ss[n, m], ss[n, m] + dp[n, m] - 1), (sl[n, m], sl[n, m] + dp[n, m] - 1)]

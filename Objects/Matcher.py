@@ -12,7 +12,6 @@ from Parser             import *
 from Utilities          import *
 from LCS                import lcs_cython as cy
 from typing             import *
-from concurrent.futures import *
 from alive_progress     import alive_bar
 
 class Matcher:
@@ -48,61 +47,68 @@ class Matcher:
         self.storage       = storage
         self.parser        = parser
         self.bitboard_sums = [position.bitboard_integers for position in parser.positions]
-        self.partitions    = storage.get_partition_metadata()
-        self.match         = (None, None, 0)
+        self.partitions    = storage.get_metadata()
+        self.match         = (None, None, 0, 0)
 
-    def process_partition(self, part_id: int) -> Tuple[pd.DataFrame, int, List[int]]:
+    def process_partition(self, part_id: int) -> Tuple[int, List[int]]:
         '''
         Processes a single partition and computes the LCS for it.
         '''
 
-        partition = self.storage.from_parquet(partitions = part_id).compute()
-        return partition, cy.lcs_indices(np.array(self.bitboard_sums, dtype = np.uint64), 
-                                         np.array(partition['board_sum'].tolist(), dtype = np.uint64))
+        partition = self.storage.from_parquet(partition = part_id, columns = ["board_sum"])
+        return cy.lcs_indices(np.array(self.bitboard_sums, dtype = np.uint64), 
+                              np.array(partition['board_sum'].tolist(), dtype = np.uint64))
+
 
     def find_best_lcs(self) -> Tuple[Optional[str], Optional[List[Tuple[int, int]]], int]:
         '''
-        Finds the best LCS across all partitions.
+        Finds the best Longest Common Subsequence (LCS) across all partitions.
 
-        This method uses ThreadPoolExecutor to process multiple partitions concurrently, which improves performance
-        by taking advantage of multiple CPU cores. It submits futures for each partition and processes them in the order
-        they complete using the as_completed function. It cancels any remaining futures with a partition_id less than the
-        best match found so far, further improving performance by avoiding unnecessary computations.
+        This method iterates over the partitions in descending order of total_ply. For each partition, it calculates the LCS 
+        and updates the best match if the current LCS is longer. The method stops processing partitions as soon as the length 
+        of the best LCS is greater than the total_ply of the next partition, as it's impossible for a longer LCS to exist in 
+        the remaining partitions.
 
         A progress bar is displayed using the alive-progress package, showing the progress of the task and the longest 
         sequence of ply found so far.
 
-        The time complexity of this algorithm depends on the number of partitions, the number of CPU cores, and the time
-        required to process each partition. In the worst case, the time complexity is O(n), where n is the number of partitions.
-        However, due to concurrency and early stopping, the actual execution time is typically much lower.
+        Args:
+            None
+
+        Returns:
+            A tuple containing the Parser object for the best match, the indices of the best match, and the length of the best match.
         '''
 
         print()
         with alive_bar(sum(self.partitions.values()), bar = 'smooth', dual_line = True) as bar:
-            with ThreadPoolExecutor() as executor:
-                futures = {executor.submit(self.process_partition, p): p for p in self.partitions}
+            for total_ply, num_records in self.partitions.items():
+                
+                if self.match[2] > total_ply:
+                    break
 
-                for future in as_completed(futures):
-                    seq = self.match[2]
-                    bar.text(f'Reviewed all games ≥ {futures[future]} ply. Longest sequence ({seq}): {"".join(["♟︎", "♙"] * (seq // 2) + ["♟︎"] * (seq % 2))}')
-                    bar(self.partitions[futures[future]])
+                bar.text(f'Reviewed all games ≥ {total_ply} ply. Longest sequence ({self.match[2]}): {"".join(["♟︎", "♙"] * (self.match[2] // 2) + ["♟︎"] * (self.match[2] % 2))}')
+                bar(num_records)
 
-                    for cancelled, partition_id in list(futures.items()):
-                        if partition_id < seq:
-                            cancelled.cancel()
+                lcs_length, lcs_indices = self.process_partition(total_ply)
+                if lcs_length > self.match[2]:
+                    self.match = (None, lcs_indices, lcs_length, total_ply)
 
-                    try: partition, metadata = future.result()
-                    except CancelledError: continue
+        # Retrieve the best match from storage
+        match_row    = self.storage.from_parquet(partition = self.match[3], columns = ['ply', 'pgn'], rows = [self.match[1][0][0]])
+        match_pgn    = match_row.iloc[0]['pgn']
+        match_parser = Parser(match_pgn, False)
+        print(self.match)
 
-                    if metadata[0] > self.match[2]:
-                        match_parser = Parser(partition.iloc[metadata[1][1][1]]['pgn'], False)
-                        metadata[1][1] = (partition.iloc[metadata[1][1][0]]['ply'],
-                                          partition.iloc[metadata[1][1][1]]['ply'])
-                        self.match = (match_parser, metadata[1], metadata[0])
+        # Convert the indices to be relative to the start of the game
+        game_start   = match_row.iloc[0]['ply']
+        game_indices = [self.match[1][0], (game_start, game_start + self.match[2] - 1)]
+        
+        self.match = (match_parser, game_indices, self.match[2], self.match[3])
 
     def __str__(self) -> str:
 
-        match_info   = self.match
+        match_info = self.match
+        print(match_info)
         if not match_info[0]: return "No matching games found."
 
         positions   = match_info[0].positions
@@ -116,8 +122,8 @@ class Matcher:
                 f"\nThe longest matching sequence starts{(' from the beginning' if start_move == 0 else f' with {start_match.move_notation} at move {start_move}')}"
                 f" and continues for {match_info[2]} ply to {end_match.move_notation} at move {end_move}.")
 
-    def __call__(self, print_result: bool = True):
+    def __call__(self):
 
         self.find_best_lcs()
-        if print_result: print(self)
+        print(self)
         return self.match
