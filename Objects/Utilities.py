@@ -92,7 +92,7 @@ class Utility:
             if os.path.isdir(dir_path):
                 total_ply = int(dir_name.split("=")[1])
                 dataset   = pq.ParquetDataset(dir_path)
-                partitions[total_ply] = sum(fragment.to_table().num_rows for fragment in dataset.fragments)
+                partitions[total_ply] = sum(pq.read_metadata(fragment.path).num_rows for fragment in dataset.fragments)
 
         return dict(sorted(partitions.items(), key = lambda item: item[0], reverse = True))
 

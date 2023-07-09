@@ -18,6 +18,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# get_metadata needs faster num_records retrieval
-# sum remaining row_volume when ending early
