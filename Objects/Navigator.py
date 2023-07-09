@@ -1,233 +1,195 @@
 '''
 Author:        James Parkington
 Created Date:  4/23/2023
-Modified Date: 7/8/2023
+Modified Date: 7/9/2023
 
 File containing the implementation of the Navigator class for rendering a list of Position objects
 as an interactive slideshow using tkinter.
 '''
 
-from   Parser    import *
-from   typing    import List
-from   itertools import *
-from   datetime  import datetime
-import tkinter   as tk
+from   Parser      import *
+from   datetime    import datetime
+from   typing      import *
+import tkinter     as tk
 
 class Navigator:
     '''
+    The Navigator class provides an interactive slideshow for viewing a list of chess positions. 
+    It uses the tkinter library for its GUI and works with Parser objects to get the list of positions from PGN files.
+
     Attributes:
-        parser1       (Parser):    The first Parser object containing a game to be displayed in the slideshow.
-        parser2       (Parser):    The optional second Parser object containing another game to be displayed in the slideshow.
-        indices       (Tuple):     An optional list with the start and end indices of the matching sequence between parser1 and parser2.
-        active_parser (Parser):    The currently active Parser object, used to get positions and metadata for the game.
-        index         (int):       The current index in the list of Position objects.
-        square_size   (int):       The size of each square in the chessboard canvas.
-        ts            (datetime):  Used in the match tk.Label to display the upload time to the user.
-
-        root          (tk.Tk):     The tkinter root object.
-        match         (tk.Label):  The tkinter Label object used to display whether or not this was a matching position.
-        event         (tk.Label):  The tkinter Label object used to display the players in a matched game.
-        move          (tk.Label):  The tkinter Label object used to display the move information.
-        turn          (tk.Label):  The tkinter Label object used to display whose turn it is.
-        canvas        (tk.Canvas): The tkinter Canvas object used to display the chessboard.
-
-        l_arrow       (tk.Button): The tkinter Button object used to navigate to the previous position.
-        r_arrow       (tk.Button): The tkinter Button object used to navigate to the next position.
-        f_arrow       (tk.Button): The tkinter Button object used to navigate to the first position.
-        e_arrow       (tk.Button): The tkinter Button object used to navigate to the last position.
-        toggle        (tk.Button): The tkinter Button object used to switch between two games.
-        frame         (tk.Button): The tkinter Frame object that ensures all tk.Button objects are horizontally aligned.
+        parsers         (List[Parser]) : A list of Parser objects, each containing a game to be displayed in the slideshow.
+        parser_index    (int)          : The index of the currently active Parser object.
+        match_indices   (Tuple)        : An optional tuple with the start/end indices of the matching sequence between games from different Parsers.
+        ply_index       (int)          : The current index in the list of Position objects from the active Parser.
+        square_size     (int)          : The size of each square in the chessboard canvas.
+        ts              (datetime)     : Timestamp indicating when the game was uploaded.
 
     Methods:
-        toggle_game():      Switches to the other Parser object and displays that game's position at the same index.
-        draw_canvas():      Draws the chessboard corresponding to the current position.
-        display_position(): Displays the current position on the board_label and move information on the move_label.
-        __call__():         Initializes the Navigator and starts the tkinter main loop.
-
-    This class provides a simple way to view a list of Position objects as an interactive slideshow, allowing the
-    user to navigate through positions using the left and right arrow keys.
+        active_indices   : Returns the start and end indices of the matching sequence for the active Parser.
+        end_index        : Returns the final index in the list of Position objects for the active Parser.
+        create_buttons   : Creates the navigation buttons and binds the appropriate actions to them.
+        toggle_parser    : Switches which parser is actively on-screen.
+        update_ply_index : Updates the current index based on the button pressed and displays the new position.
+        update_states    : Updates the state of navigation buttons based on the current position index.
+        draw_canvas      : Draws the chessboard corresponding to the current position.
+        update_labels    : Updates the labels to show the current position and metadata.
+        pack_components  : Packs the labels, canvas, and buttons into the tkinter window.
+        display_position : Updates the display to show the current position and metadata.
+        __call__         : Displays the initial position and starts the tkinter main loop.
     '''
 
     def __init__(self, 
-                 parser1: Parser,
-                 parser2: Optional[Parser] = None,
-                 indices: Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None):
-        
-        self.parser1     = parser1
-        self.parser2     = parser2
-        self.indices     = indices
-        self.is_parser1  = True
-        self.index       = 0
-        self.square_size = 80
-        self.ts          = datetime.now().strftime('%b %d, %Y at %-I:%M %p')
+                 parser1       : Parser,
+                 parser2       : Optional[Parser] = None,
+                 match_indices : Optional[Tuple[Tuple[int, int], Tuple[int, int]]] = None):
 
-        self.root   = tk.Tk()
-        self.match  = tk.Label(self.root, font = ("Menlo", 20, "bold"))
-        self.event  = tk.Label(self.root, font = ("Menlo", 14, "italic"))
-        self.move   = tk.Label(self.root, font = ("Menlo", 12, "bold"))
-        self.turn   = tk.Label(self.root, font = ("Menlo", 12))
-        self.canvas = tk.Canvas(self.root,
-                                width  = self.square_size * 8, 
-                                height = self.square_size * 8)
+        self.parsers = [parser1]
+        if parser2: self.parsers.append(parser2)
 
-        self.l_arrow = tk.Button(self.root, text = "←", font = ("Menlo", 30), command = self.set_prev_position)
-        self.r_arrow = tk.Button(self.root, text = "→", font = ("Menlo", 30), command = self.set_next_position)
-        self.f_arrow = tk.Button(self.root, text = "⇤", font = ("Menlo", 30), command = self.set_first_position)
-        self.e_arrow = tk.Button(self.root, text = "⇥", font = ("Menlo", 30), command = self.set_end_position)
+        self.parser_index  = 0
+        self.match_indices = match_indices
+        self.ply_index     = 0
+        self.square_size   = 80
+        self.ts            = datetime.now().strftime('%b %d, %Y at %-I:%M %p')
+        self.root          = tk.Tk()
+        self.frame         = tk.Frame(self.root)
+        self.canvas        = tk.Canvas(self.root, width = self.square_size * 8, height = self.square_size * 8)
+        self.labels        = [tk.Label(self.root, font = ("Menlo", 20, "bold")),
+                              tk.Label(self.root, font = ("Menlo", 14, "italic")),
+                              tk.Label(self.root, font = ("Menlo", 12, "bold")),
+                              tk.Label(self.root, font = ("Menlo", 12))]
 
-        self.frame   = tk.Frame(self.root)
-        self.con     = tk.Button(self.frame, text = "↣", font = ("Menlo", 30), command = self.set_convergence_position)
-        self.div     = tk.Button(self.frame, text = "↛", font = ("Menlo", 30), command = self.set_divergence_position)
-        self.toggle  = tk.Button(self.frame, text = "↪", font = ("Menlo", 30), command = self.toggle_game)
-
+        self.props = {"⇤": {"side": "left",  "key": "<Up>",    "action": lambda: 0,                                       "condition": lambda: self.ply_index    == 0},
+                      "←": {"side": "left",  "key": "<Left>",  "action": lambda: max(self.ply_index - 1, 0),              "condition": lambda: self.ply_index    == 0},
+                      "↣": {"side": "left",  "key": "c",       "action": lambda: self.active_indices[0],                  "condition": lambda: self.ply_index    == self.active_indices[0]},
+                      "↪": {"side": "left",  "key": "<space>", "action": lambda: self.toggle_parser(),                    "condition": lambda: len(self.parsers) == 1},
+                      "↛": {"side": "left",  "key": "d",       "action": lambda: self.active_indices[1],                  "condition": lambda: self.ply_index    == self.active_indices[1]},
+                      "⇥": {"side": "right", "key": "<Down>",  "action": lambda: self.end_index,                          "condition": lambda: self.ply_index    == self.end_index},
+                      "→": {"side": "right", "key": "<Right>", "action": lambda: min(self.ply_index + 1, self.end_index), "condition": lambda: self.ply_index    == self.end_index}}
+        self.buttons = self.create_buttons()
+    
     @property
-    def active_parser(self):
-        return self.parser1 if self.is_parser1 else self.parser2
+    def active_indices(self):
+        return self.match_indices[0] if self.parser_index == 0 else self.match_indices[1]
 
     @property
     def end_index(self):
-        return len(self.active_parser.positions) - 1
-
-    def set_next_position(self, event = None):
-        self.index = min(self.index + 1, self.end_index)
-        self.display_position()
-
-    def set_prev_position(self, event = None):
-        self.index = max(self.index - 1, 0)
-        self.display_position()
-
-    def set_first_position(self, event = None):
-        self.index = 0
-        self.display_position()
-
-    def set_end_position(self, event = None):
-        self.index = self.end_index
-        self.display_position()
-
-    def set_convergence_position(self, event = None):
-        self.index = self.indices[0][0] if self.is_parser1 else self.indices[1][0]
-        self.display_position()
-
-    def set_divergence_position(self, event = None):
-        self.index = self.indices[0][1] if self.is_parser1 else self.indices[1][1]
-        self.display_position()
-
+        return len(self.parsers[self.parser_index].positions) - 1
+    
+    def create_buttons(self):
+        '''
+        Creates the navigation buttons and binds the appropriate actions to them. The actions include navigating 
+        to the previous or next position and toggling between the loaded games. 
+        '''
+        
+        buttons = []
+        for i, (k, v) in enumerate(self.props.items()):
+            self.root.bind(v['key'], lambda event, i=i: self.update_ply_index(i))
+            buttons.append(tk.Button(self.frame if k in ["↣", "↪", "↛"] else self.root, 
+                                text = k, font = ("Menlo", 30), command = lambda i=i: self.update_ply_index(i)))
+        return buttons
+    
     def toggle_parser(self):
-        self.is_parser1 = not self.is_parser1
-
-    def toggle_game(self):
         '''
-        Switches to the other Parser object and displays that game's position at the same index. 
+        Switches between the Parser objects in the parsers list and ensures an invalid ply_index isn't used upon switching.
         
-        If out of index, resets to the last position in the current game.
+        The `parser_index` is incremented and wrapped around the length of the parsers list to achieve this. If the current 
+        `ply_index` is beyond the `end_index` of the new active Parser, it is adjusted to that Parser's final ply.
         '''
 
-        self.toggle_parser()
-        if self.index > self.end_index: self.index = self.end_index
+        self.parser_index = (self.parser_index + 1) % len(self.parsers)
+        if self.ply_index > self.end_index: self.ply_index = self.end_index
+        return self.ply_index
+    
+    def update_ply_index(self, i: int):
+        '''
+        Updates the current index based on the button pressed and displays the new position.
+        '''
+        
+        self.ply_index = self.props[self.buttons[i].cget('text')]["action"]()
         self.display_position()
 
-    def update_button_states(self):
-        """
+    def update_states(self):
+        '''
         Updates the state of navigation buttons based on the current position index.
-        
-        If at the first position, disable f_arrow and l_arrow buttons.
-        If at the last position, disable e_arrow and r_arrow buttons.
-        """
+        '''
 
-        if self.index == 0:
-            self.f_arrow.config(state = "disabled")
-            self.l_arrow.config(state = "disabled")
-        else:
-            self.f_arrow.config(state = "normal")
-            self.l_arrow.config(state = "normal")
+        for i in self.buttons:
+            i.config(state = "disabled" if self.props[i.cget('text')]["condition"]() else "normal")
 
-        if self.index == self.end_index:
-            self.e_arrow.config(state = "disabled")
-            self.r_arrow.config(state = "disabled")
-        else:
-            self.e_arrow.config(state = "normal")
-            self.r_arrow.config(state = "normal")
-
-        if self.parser2:
-            con_index = self.indices[0][0] if self.is_parser1 else self.indices[1][0]
-            div_index = self.indices[0][1] if self.is_parser1 else self.indices[1][1]
-
-            self.con.config(state = "normal" if self.index != con_index else "disabled")
-            self.div.config(state = "normal" if self.index != div_index else "disabled")
-            self.toggle.config(state = "normal")
-        else:
-            self.con.config(state = "disabled")
-            self.div.config(state = "disabled")
-            self.toggle.config(state = "disabled")
-
-    def draw_canvas(self, position):
+    def draw_canvas(self, position: Position):
         '''
         Draws the chessboard corresponding to the current position.
-        
+
         This method creates a rectangle for each square on the chessboard and fills it with a color based on the square's 
         index. It then adds the corresponding chess piece to the center of each square. The chessboard is drawn on the 
         tkinter canvas, which is then packed and visible in the tkinter window.
         '''
 
-        board       = position.get_board()
-        squares     = [square for row in board for square in row]
-        colors      = ["#E0E0E0", "#B0B0B0" if self.is_parser1 else "#A3B9CC"] * 4
+        board  = position.get_board()
+        colors = ["#E0E0E0", "#B0B0B0" if self.parser_index == 0 else "#A3B9CC"]
 
-        for i, (color, square) in enumerate(zip(cycle(colors + colors[::-1]), squares)):
-            j = i % 8
-            x = j * self.square_size
-            y = (i // 8) * self.square_size
-            self.canvas.create_rectangle(x, y, x + self.square_size, y + self.square_size, fill = color)
+        for i, square in enumerate(square for row in board for square in row):
+            y, x = divmod(i, 8)
+            x *= self.square_size
+            y *= self.square_size
+            self.canvas.create_rectangle(x, y, x + self.square_size, y + self.square_size, 
+                                         fill = colors[(x // self.square_size + y // self.square_size) % 2])
             self.canvas.create_text(x + self.square_size / 2, y + self.square_size / 2 - self.square_size / 20, text = square, 
-                                     font = ("Arial Unicode MS", int(self.square_size * 0.8)), fill = 'black')
+                                    font = ("Arial Unicode MS", int(self.square_size * 0.8)), fill = 'black')
+
+    def update_labels(self, 
+                      parser   : Parser, 
+                      position : Position):
+        '''
+        Updates the labels to show the current position and metadata. This method fetches the metadata and current 
+        position from the active Parser and updates the tkinter labels to display this information. 
+        
+        The labels include the timestamp or game title, the players and date of the game, the current move notation, 
+        and the result or current player's turn.
+        '''
+
+        metadata = parser.metadata
+
+        self.labels[0].config(text = f"Game Uploaded on {self.ts}" if self.parser_index == 0 else "Matched Game", pady = 10)
+        self.labels[1].config(text = f"{metadata.get('White', '')} vs. {metadata.get('Black', '')} ({metadata.get('Date', '').split('.')[0]})", pady = 0)
+        self.labels[2].config(text = f"{position.move_number}. {position.move_notation}", pady = 10)
+        self.labels[3].config(text = metadata.get('Result', '') if position.final_move else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
+
+    def pack_components(self):
+        '''
+        Packs the labels, canvas, and buttons into the tkinter window.
+        '''
+
+        for i in self.labels:  i.pack()
+        self.canvas.pack()
+        for j in self.buttons: j.pack(side = self.props[j.cget('text')]['side'])
+        self.frame.pack()
 
     def display_position(self):
         '''
-        Displays the current position on the board_label and move information on the move_label.
+        Updates the display to show the current position and metadata. 
         
-        This method updates the text of the move_label with the move information in typical chess parlance (e.g., "1. e4" for the first move) 
-        and updates the text of the board_label with the string representation of the current position. It then ensures that both labels are 
-        packed and visible in the tkinter window.
+        This method first clears the tkinter canvas and draws the new position. Then it updates the labels to show 
+        the correct metadata and position information. Finally, it packs all the GUI components into the tkinter 
+        window and updates the state of the navigation buttons. 
+        
+        This method is called each time a navigation button is pressed to refresh the display.
         '''
 
-        parser   = self.active_parser
-        position = parser.positions[self.index]
-        metadata = parser.metadata
+        parser   = self.parsers[self.parser_index]
+        position = parser.positions[self.ply_index]
 
         self.canvas.delete("all")
         self.draw_canvas(position)
 
-        self.match.config(text = f"Game Uploaded on {self.ts}" if self.is_parser1 else "Matched Game", pady = 10)
-        self.event.config(text = f"{metadata.get('White', '')} vs. {metadata.get('Black', '')} ({metadata.get('Date', '').split('.')[0]})", pady = 0)
-        self.move.config(text  = f"{position.move_number}. {position.move_notation}", pady = 10)
-        self.turn.config(text  = metadata.get('Result', '') if position.final_move else ("White to Move" if position.white_turn else "Black to Move"), pady = 10)
-
-        self.match.pack()
-        self.event.pack()
-        self.move.pack()
-        self.canvas.pack()
-        self.turn.pack()
-
-        self.f_arrow.pack(side = "left")
-        self.l_arrow.pack(side = "left")
-        self.e_arrow.pack(side = "right")
-        self.r_arrow.pack(side = "right")
-        self.con.pack(side     = 'left')
-        self.toggle.pack(side  = 'left')
-        self.div.pack(side     = 'left')
-        self.frame.pack()
-        self.update_button_states()
+        self.root.title("Navigator")
+        self.update_labels(parser, position)
+        self.pack_components()
+        self.update_states()
 
     def __call__(self):
-        
-        self.root.title("Navigator")
-        self.root.bind("<Right>", self.set_next_position)
-        self.root.bind("<Left>",  self.set_prev_position)
-        self.root.bind("<Up>",    self.set_first_position)
-        self.root.bind("<Down>",  self.set_end_position)
-        self.root.bind("<space>", self.toggle_game)
-        self.root.bind("c",       self.set_convergence_position)
-        self.root.bind("d",       self.set_divergence_position)
 
         self.display_position()
-        self.root.mainloop() 
+        self.root.mainloop()

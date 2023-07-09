@@ -67,7 +67,7 @@ class Parser:
         The method extracts the metadata from the game headers and returns a dictionary with key-value pairs.
         '''
 
-        return {key: self.game.headers[key] for key in self.game.headers.keys() if self.game.headers[key] not in ["?", "0", "", " "]}
+        return {k: v for k, v in self.game.headers.items() if v not in ["?", "0", "", " "]}
 
     def get_positions(self) -> List['Position']:
         '''

@@ -2,9 +2,6 @@
 Author:        James Parkington
 Created Date:  4/15/2023
 Modified Date: 4/22/2023
-
-File containing a demonstration of the PGN class usage for parsing a PGN file
-and interacting with the Position and Piece classes in a chess game analysis tool.
 '''
 
 from Matcher   import *

@@ -273,8 +273,5 @@ class Utility:
     
 
     def __call__(self):
-        '''
-        Allows a Utility() object to more concisely return a pgn_path.
-        '''
 
         return self.pgn_path
