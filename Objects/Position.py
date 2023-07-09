@@ -25,10 +25,10 @@ class Position:
         bitboards      (dict) : A dictionary containing the bitboards for each piece type and color.
 
     Methods:
-        apply_move           : Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
-        generate_bitboards   : Converts a python-chess Board object into a set of bitboards.
-        get_board            : Generates a 2D list representing the board state at a given ply.
-        __str__              : Returns a textual representation of the board state at a given ply for easy visualization.
+        get_bitboards : Converts a python-chess Board object into a set of bitboards.
+        apply_move    : Applies a given move to the current position and updates the bitboards, move history, and player turn accordingly.
+        get_board     : Generates a 2D list representing the board state at a given ply.
+        __str__       : Returns a textual representation of the board state at a given ply for easy visualization.
     '''
 
     def __init__(self,

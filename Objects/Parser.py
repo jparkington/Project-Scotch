@@ -28,7 +28,6 @@ class Parser:
         read_game     : Reads the PGN file or PGN string using the python-chess library and returns the game object.
         get_metadata  : Returns a dictionary containing the metadata of the PGN file.
         get_positions : Parses the PGN file and returns a list of Position objects for each position in the game.
-        generate_id   : Calculates the bitboard sum of all positions.
     '''
 
     def __init__(self, 
@@ -50,22 +49,16 @@ class Parser:
         file-like interface to the PGN string, allowing the python-chess library to read it.
         '''
 
-        def read_first_game(pgn_source) -> pgn.Game:
-            first_game  = pgn.read_game(pgn_source)
-            second_game = pgn.read_game(pgn_source)
-            if second_game: print("Warning: Multiple games detected. The program currently only processes the first game.")
-            return first_game
-
         if not self.pgn_input:
             print("No PGN file provided. Entering demo mode.")
             self.pgn_input = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../Games/demo.pgn')
 
         if self.is_file:
             with open(self.pgn_input, "r") as pgn_file:
-                return read_first_game(pgn_file)
+                return pgn.read_game(pgn_file)
         else:
             pgn_string = io.StringIO(self.pgn_input)
-            return read_first_game(pgn_string)
+            return pgn.read_game(pgn_string)
 
     def get_metadata(self) -> Dict[str, str]:
         '''
@@ -102,15 +95,3 @@ class Parser:
 
         positions[-1].final_move = True
         return positions
-    
-    @staticmethod
-    def generate_id(positions: List['Position']) -> int:
-        '''
-        Calculates a unique identifier for the game based on the positions.
-
-        This method iterates through each position in the game and calculates the sum of the position's 
-        bitboards. It then adds the total number of positions to the sum to create an identifier that can 
-        be used as a game identifier, allowing for efficient matching and comparison of games.
-        '''
-
-        return sum(i.bitboard_integers for i in positions) + len(positions)

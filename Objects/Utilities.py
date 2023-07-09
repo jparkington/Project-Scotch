@@ -179,9 +179,9 @@ class Utility:
         used for storage, analysis, or matching.
         '''
     
-        game_id     = parser.generate_id(parser.positions)
         pgn_string  = str(parser.get_game())
         total_ply   = len(parser.positions)
+        game_id     = sum(i.bitboard_integers for i in parser.positions) + total_ply
 
         delayed_data = [dk.delayed(pd.DataFrame({"game_id"   : game_id,
                                                  "pgn"       : pgn_string,
