@@ -54,9 +54,9 @@ class Utility:
         return file_path
 
     def from_parquet(self, 
-                    partition : int, 
-                    columns   : List[str] = None, 
-                    rows      : List[int] = None) -> pd.DataFrame:
+                     partition : int, 
+                     columns   : List[str] = None, 
+                     rows      : List[int] = None) -> pd.DataFrame:
         '''
         Reads data from a Parquet file into a DataFrame.
 
