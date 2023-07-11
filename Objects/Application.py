@@ -11,7 +11,7 @@ from Utilities import *
 
 def main():
 
-    files  = Utility()
+    files  = Utility(pq_name = "StorageOptimized")
     parser = Parser(files())
     match  = Matcher(files, parser)()
     Navigator(parser, match[0], match[1])()

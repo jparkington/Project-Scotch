@@ -54,9 +54,9 @@ class Utility:
         return file_path
 
     def from_parquet(self, 
-                     partition : int, 
-                     columns   : List[str] = None, 
-                     rows      : List[int] = None) -> pd.DataFrame:
+                    partition : int, 
+                    columns   : List[str] = None, 
+                    rows      : List[int] = None) -> pd.DataFrame:
         '''
         Reads data from a Parquet file into a DataFrame.
 
@@ -69,10 +69,8 @@ class Utility:
             A DataFrame containing the data from the specified partition, columns, and rows.
         '''
 
-        df = pd.read_parquet(f"{self.pq_path}/total_ply={partition}", columns = columns)
-
-        if rows is not None:
-            df = df.iloc[rows]
+        df = pd.read_parquet(os.path.join(self.pq_path, f"total_ply={partition}", 'data.parquet'), columns = columns)
+        if rows is not None: df = df.iloc[rows]
 
         return df
 
@@ -86,15 +84,12 @@ class Utility:
             A dictionary mapping total_ply values to the number of records in the corresponding partition, sorted in descending order by total_ply.
         '''
 
-        partitions = {}
-        for dir_name in os.listdir(self.pq_path):
-            dir_path = os.path.join(self.pq_path, dir_name)
-            if os.path.isdir(dir_path):
-                total_ply = int(dir_name.split("=")[1])
-                dataset   = pq.ParquetDataset(dir_path)
-                partitions[total_ply] = sum(pq.read_metadata(fragment.path).num_rows for fragment in dataset.fragments)
+        partitions = pd.read_csv(os.path.join(self.pq_path, 'metadata.csv')).set_index('total_ply')['num_rows'].to_dict()
 
-        return dict(sorted(partitions.items(), key = lambda item: item[0], reverse = True))
+        return dict(sorted(partitions.items(), 
+                           key     = lambda item: item[0], 
+                           reverse = True))
+
 
     def __call__(self) -> str:
         '''
