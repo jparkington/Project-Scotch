@@ -10,8 +10,7 @@ This repository contains a series of classes, a Cython implementation of the Lon
 - [Introduction](#introduction)
 - [Classes](#classes)
 - [Cython Implementation of LCS](#cython-implementation-of-lcs)
-- [Data](#data)
-  - [Parquet](#parquet)
+- [Data \& Parquet](#data--parquet)
 - [Setup and Usage](#setup-and-usage)
 - [Authors and Acknowledgements](#authors-and-acknowledgements)
 - [License](#license)
@@ -46,11 +45,10 @@ This module contains an optimized implementation of the Longest Common Subsequen
 
 The Cython implementation is meant to be used as an imported module in other Python scripts that require an efficient LCS algorithm. To use this module, simply import it into your script and call the `lcs_indices` function with your input sequences as NumPy arrays with `dtype = np.int64`. The function will return a tuple containing the length of the LCS and a list of two tuples, where each tuple contains the start and end indices of the LCS in the short and long sequences.
 
-## Data
+## Data & Parquet
 
 The program processes a large dataset containing over 7 million chess positions from professional tournament games as of May 2023. The source material for this dataset comes from [PGN Mentor](https://www.pgnmentor.com), a popular resource for chess games in the PGN (Portable Game Notation) format.
 
-### Parquet
 [Parquet](https://parquet.apache.org) is a columnar storage file format optimized for big data processing frameworks like Apache Spark, Apache Hive, and Apache Impala. It is designed to provide efficient data compression and encoding schemes, enabling fast querying of data stored in a columnar fashion. By using the Parquet format, the program can reduce storage space and improve query performance when working with the large dataset of chess positions.
 
 ## Setup and Usage
