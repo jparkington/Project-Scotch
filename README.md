@@ -12,8 +12,6 @@ This repository contains a series of classes, a Cython implementation of the Lon
 - [Cython Implementation of LCS](#cython-implementation-of-lcs)
 - [Data](#data)
   - [Parquet](#parquet)
-  - [Dask](#dask)
-  - [ThreadPoolExecutor](#threadpoolexecutor)
 - [Setup and Usage](#setup-and-usage)
 - [Authors and Acknowledgements](#authors-and-acknowledgements)
 - [License](#license)
@@ -29,7 +27,6 @@ These components work together to form a cohesive system that helps users explor
 
 In short, this program's methodologies include:
 - Efficient data storage using the [Parquet](https://parquet.apache.org) file format
-- Parallel processing of large datasets using [Dask](https://docs.dask.org) partitions
 - Longest Common Subsequence (LCS) algorithm optimized with [Cython](https://cython.readthedocs.io)
 - User-friendly game navigation and visualization using [tkinter](https://docs.python.org/3/library/tkinter.html)
 
@@ -55,17 +52,6 @@ The program processes a large dataset containing over 7 million chess positions 
 
 ### Parquet
 [Parquet](https://parquet.apache.org) is a columnar storage file format optimized for big data processing frameworks like Apache Spark, Apache Hive, and Apache Impala. It is designed to provide efficient data compression and encoding schemes, enabling fast querying of data stored in a columnar fashion. By using the Parquet format, the program can reduce storage space and improve query performance when working with the large dataset of chess positions.
-
-### Dask
-[Dask](https://docs.dask.org) is a parallel computing library for Python that enables users to work with larger-than-memory datasets efficiently. It can automatically parallelize operations on large datasets, breaking them into smaller chunks and executing tasks concurrently. This allows for efficient processing and manipulation of large datasets without running into memory constraints.
-
-In this program, Dask is used to partition the large dataset of chess positions into smaller, more manageable pieces. This partitioning enables the program to perform operations on the dataset in parallel, significantly improving performance and reducing execution time. By using Dask in conjunction with the Parquet file format, the program can efficiently read and write data in parallel, allowing for faster processing of the large dataset.
-
-### ThreadPoolExecutor
-
-[ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor) is a high-level interface for asynchronously executing functions using a pool of worker threads. It is part of the `concurrent.futures` module in Python and provides an efficient way to manage and parallelize tasks, improving the overall performance of the program.
-
-In the Matcher class, the ThreadPoolExecutor is used to concurrently process multiple games from the dataset. By distributing the tasks across multiple threads, the program can leverage parallelism to speed up the matching process. This allows for faster identification of the best matching games, even when working with a large dataset containing millions of chess positions.
 
 ## Setup and Usage
 
@@ -106,9 +92,7 @@ This project is not subject to any specific licensing. The data provided, PGN Me
 
 - [PGN Mentor](https://www.pgnmentor.com/)
 - [Cython Documentation](https://cython.readthedocs.io/)
-- [Dask Documentation](https://docs.dask.org/)
 - [Parquet File Format](https://parquet.apache.org/)
 - [Tkinter Documentation](https://docs.python.org/3/library/tkinter.html)
-- [ThreadPoolExecutor](https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor)
 - [Chess Library for Python](https://python-chess.readthedocs.io/en/latest/)
 - [Alive Progress Bar](https://github.com/rsalmei/alive-progress#readme)
