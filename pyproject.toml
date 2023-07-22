@@ -2,7 +2,7 @@
 name           = "project scotch"
 version        = "1.0.0"
 description    = "A chess analytics tool that compares user-submitted games to a database of GM games, helping users learn stronger continuations by studying closest matches."
-authors        = ["James Parkington (https://github.com/jparkington)"]
+authors        = ["James Parkington <pongs.acreage.0o@icloud.com>"]
 readme         = "README.md"
 
 [tool.poetry.dependencies]
