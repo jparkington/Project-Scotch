@@ -58,10 +58,12 @@ Project Scotch is a Python implementation that utilizes five classes, an Applica
 1. Install [Python](https://www.python.org/downloads/).
 2. Clone this repository to your local machine.
 3. In the terminal, navigate to the repository's directory.
-4. Install the required packages by running the following command in your terminal: `pip install -r requirements.txt`
-   - **Note**: You might need to install [tkinter](https://docs.python.org/3/library/tkinter.html) separately based on your system. For example, in Ubuntu, you can run `sudo apt-get install python3-tk`.
-5. Run the main Application file using Python, with the following options:
-   
+4. Install [Poetry](https://python-poetry.org/docs/#installation), a tool for dependency management in Python projects.
+5. Install the required packages by running the following command in your terminal: `poetry install`
+   - **Note**: This command will create a virtual environment and install the dependencies specified in the `pyproject.toml` file. You might need to install [tkinter](https://docs.python.org/3/library/tkinter.html) separately based on your system. For example, in Ubuntu, you can run `sudo apt-get install python3-tk`.
+6. To activate the Poetry-created virtual environment, run: `poetry shell`
+7. Run the main Application file using Python, with the following options:
+
 Supply a PGN game as a command-line argument:
 ```
 python Application.py /path/to/your/game.pgn
