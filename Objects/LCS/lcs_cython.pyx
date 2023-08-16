@@ -1,8 +1,4 @@
 '''
-Author:        James Parkington
-Created Date:  5/7/2023
-Modified Date: 7/9/2023
-
 This file provides an optimized implementation of the Longest Common Subsequence (LCS) algorithm using Cython.
 The purpose of this file is to improve the performance of the LCS calculation when working with large sequences.
 Cython is used to generate C code from this Python-like source code, allowing for faster execution.

@@ -1,9 +1,3 @@
-'''
-Author:        James Parkington
-Created Date:  4/15/2023
-Modified Date: 4/22/2023
-'''
-
 from Matcher   import *
 from Navigator import *
 from Parser    import *

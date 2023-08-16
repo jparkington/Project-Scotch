@@ -1,13 +1,3 @@
-'''
-Author:        James Parkington
-Created Date:  3/26/2023
-Modified Date: 7/8/2023
-
-File containing the implementation of the Matcher class for comparing user-inputted
-positions with a database of existing games and returning the best matching games
-and relevant information in a chess game analysis tool.
-'''
-
 from Parser             import *
 from Utilities          import *
 from LCS                import lcs_cython as cy

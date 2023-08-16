@@ -1,13 +1,3 @@
-'''
-Author:        James Parkington
-Created Date:  3/26/2023
-Modified Date: 4/25/2023
-
-File containing the implementation of the Parser class for parsing PGN files and generating Position objects
-in a chess game analysis tool. The class makes use of the python-chess library for parsing and validating
-PGN files.
-'''
-
 from Position import *
 from typing   import *
 from chess    import pgn

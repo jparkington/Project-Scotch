@@ -1,8 +1,4 @@
 '''
-Author:        James Parkington
-Created Date:  5/8/2023
-Modified Date: 5/8/2023
-
 This setup.py file is responsible for building and compiling the Cython module lcs_cython.pyx.
 It imports the necessary modules to configure and build the Cython extension.
 

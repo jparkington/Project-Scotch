@@ -1,17 +1,9 @@
-'''
-Author:        James Parkington
-Created Date:  5/8/2023
-Modified Date: 7/9/2023
-
-File containing the Utility class for data storage and retrieval.
-'''
-
 import os
 import sys
 import pandas as pd
 import pyarrow.parquet as pq
 from tkinter import filedialog
-from typing import List, Optional, Union
+from typing  import *
 
 class Utility:
     '''

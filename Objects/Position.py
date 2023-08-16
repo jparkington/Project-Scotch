@@ -1,12 +1,3 @@
-'''
-Author:        James Parkington
-Created Date:  3/26/2023
-Modified Date: 7/8/2023
-
-File containing the implementation of the Position class for representing 
-chess positions in a chess game analysis tool.
-'''
-
 from   typing    import *
 import numpy     as np
 import chess
